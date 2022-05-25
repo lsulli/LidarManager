@@ -353,10 +353,10 @@ class LidarPluginDialog(QtWidgets.QDialog, FORM_CLASS):
                 my_raster.setRenderer(r)
                 my_ok_layers = my_ok_layers +1
                 self.progress_bar.setValue(1+int(my_ok_layers/mylayers_count*100))
+                self.textdisplay.append("Processing " + str(my_ok_layers) + " raster layer(s) \n")
             else:
                 my_err_layers = my_err_layers+1
-            self.textdisplay.append ("Processing "+ str(my_ok_layers) + " raster layer(s) \n") 
-           
+
         time.sleep(0.5)
         self.progress_bar.setValue(100)
         self.iface.mapCanvas().refreshAllLayers()
