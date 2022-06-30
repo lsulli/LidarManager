@@ -1,1 +1,1 @@
-# lidarplugin
+# LidarManagerPlugin
