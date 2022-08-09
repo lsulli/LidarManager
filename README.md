@@ -5,7 +5,7 @@ Useful to GIS user with intensive job in LIDAR analysis.
 Request LIDAR file(s) in readable directory and user with read and write privilege for user directory.
 Tested with Qgis 3.10 and later
 
-Add file(s) lidar and/or single virtual raster file directly from Tile Index Layer with valid field path (you can create it with dedicate tool - see belowe). 
+Add file(s) lidar and/or single virtual raster file directly from selected features in Tile Index Layer with valid field path (you can create it with dedicate tool - see belowe). 
 Set on the fly hillshading parameter and CRS. 
 Change LIDAR hillshading setting in TOC.
 Other Tools: 
