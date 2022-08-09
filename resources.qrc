@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/lidar_manager" >
+        <file>icons/LidarManager.ico</file>
+    </qresource>
+</RCC>

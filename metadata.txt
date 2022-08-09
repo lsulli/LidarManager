@@ -1,0 +1,68 @@
+# This file contains metadata for your plugin.
+
+# This file should be included when you package your plugin.# Mandatory items:
+
+[general]
+name=Lidar Manager
+qgisMinimumVersion=3.10
+description=Manage lidar (dtm/dsm) dataset from Tile Index Layer
+version=0.70
+author=Lorenzo Sulli - Autorità di bacino distrettuale Appennino settentrionale
+email=l.sulli@appenninosettentrionale.it - lorenzo.sulli@gmail.com
+
+about=
+	Qgis Plugin to manage small and large LIDAR dataset. Useful to GIS user with intensive job in LIDAR analysis.
+
+	Request LIDAR file(s) in readable directory and user with read and write privilege for user directory. Tested with Qgis 3.10 and following
+
+	Add file(s) lidar and/or single virtual raster file directly from Tile Index Layer with valid field path. Set on the fly hillshading parameter and CRS. 
+	Change hillshading setting to LIDAR in TOC.
+
+	Other Tools:
+    	- copy LIDAR selected in Tile Index Layer to destination directory
+    	- create Tile Index Layer from directory/subdirectory or frome LIDAR in TOC and populate valid field path. NB use gdal:tileindex process, 
+		it's quite slow, to a very fast process and complete attribute you can use "Lidar Tile Maker" experimental plugin.
+    	- create virtual raster file from LIDAR active in TOC
+    	- check path field in Tile Index Layer to control valid path for raster
+    	- interactive help string and log message
+
+
+
+tracker=https://github.com/lsulli/LidarManagerPlugin/issues
+repository=https://github.com/lsulli/LidarManagerPlugin
+# End of mandatory metadata
+
+# Recommended items:
+
+hasProcessingProvider=no
+# Uncomment the following line and add your changelog:
+changelog=
+	2022.08.05 - bug fixed for nonetype error
+	2022.08.04 - move to raster menu - improve about test in metadata
+	2022.07.28 - Improve log information
+	2022.07.07 - Change icon. Change Plugin name and all object related
+			move botton to Plugin toolbar
+	2022.07.05 - Set color string to log message
+# Tags are comma separated with spaces allowed
+tags=raster, lidar, tile index
+
+homepage=https://github.com/lsulli/LidarManagerPlugin
+category=Raster
+icon=icons\LidarManager.ico
+# experimental flag
+experimental=True
+
+# deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False
+
+# Since QGIS 3.8, a comma separated list of plugins to be installed
+# (or upgraded) can be specified.
+# Check the documentation for more information.
+# plugin_dependencies=
+
+Category of the plugin: Raster, Vector, Database or Web
+# category=Raster
+
+# If the plugin can run on QGIS Server.
+server=False
+
