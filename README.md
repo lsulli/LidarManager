@@ -1,4 +1,5 @@
 # LidarManagerPlugin
+
 Qgis Plugin to manage small and large LIDAR dataset. 
 Useful to GIS user with intensive job in LIDAR analysis.
 
@@ -14,5 +15,12 @@ Other Tools:
   - create virtual raster file from LIDAR active in TOC
   - check path field in Tile Index Layer to control valid path for raster
   - interactive help string and log message
+ 
+##  Tile Index Layer Setting
+ 
+![alt text](.\Image\fig1.JPG)
+
+When Lidar Manager Plugin is load reads layers in Table of Content (TOC) and get only polygon vector layer to populate combo box list. Get the first one in TOC. The list is empty if there aren't polygon layer. 
+With dedicate bottom ![alt text](.\Image\fig2.JPG) you can get the active layer in TOC.
 
 
