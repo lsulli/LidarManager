@@ -6,7 +6,7 @@
 name=Lidar Manager
 qgisMinimumVersion=3.10
 description=Manage lidar (dtm/dsm) dataset from Tile Index Layer
-version=0.71
+version=0.72
 author=Lorenzo Sulli - Autorità di bacino distrettuale Appennino settentrionale
 email=l.sulli@appenninosettentrionale.it - lorenzo.sulli@gmail.com
 
@@ -37,7 +37,10 @@ repository=https://github.com/lsulli/LidarManagerPlugin
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
-	2022.08.17 - bug fixed for nonetype error. Improve Readme.md file with image
+	2022.08.17 
+		Rename some function
+		Try to resolve slow output log with add lidar vrt type.  
+		Bug fixed for nonetype error. Improve Readme.md file with image		
 	2022.08.05 - bug fixed for nonetype error
 	2022.08.04 - move to raster menu - improve about test in metadata
 	2022.07.28 - Improve log information
