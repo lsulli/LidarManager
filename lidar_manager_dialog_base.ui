@@ -22,8 +22,14 @@
   <property name="windowTitle">
    <string>Lidar Manager</string>
   </property>
+  <property name="windowOpacity">
+   <double>1.000000000000000</double>
+  </property>
   <property name="toolTip">
    <string/>
+  </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
   </property>
   <property name="sizeGripEnabled">
    <bool>false</bool>
@@ -50,7 +56,7 @@
   <widget class="QPushButton" name="btn_browse_dir">
    <property name="geometry">
     <rect>
-     <x>243</x>
+     <x>238</x>
      <y>401</y>
      <width>51</width>
      <height>25</height>
@@ -325,7 +331,7 @@
     <rect>
      <x>20</x>
      <y>401</y>
-     <width>221</width>
+     <width>215</width>
      <height>25</height>
     </rect>
    </property>
@@ -371,7 +377,7 @@
    <property name="geometry">
     <rect>
      <x>240</x>
-     <y>685</y>
+     <y>688</y>
      <width>91</width>
      <height>23</height>
     </rect>
@@ -441,19 +447,6 @@
     <bool>false</bool>
    </property>
   </widget>
-  <widget class="Line" name="line_4">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>381</y>
-     <width>62</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-  </widget>
   <widget class="QLabel" name="label_8">
    <property name="geometry">
     <rect>
@@ -463,8 +456,11 @@
      <height>17</height>
     </rect>
    </property>
+   <property name="autoFillBackground">
+    <bool>true</bool>
+   </property>
    <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
+    <enum>QFrame::Box</enum>
    </property>
    <property name="frameShadow">
     <enum>QFrame::Plain</enum>
@@ -479,19 +475,6 @@
     <set>Qt::AlignCenter</set>
    </property>
   </widget>
-  <widget class="Line" name="line_5">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>381</y>
-     <width>62</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-  </widget>
   <widget class="QFrame" name="frame2">
    <property name="enabled">
     <bool>true</bool>
@@ -504,11 +487,17 @@
      <height>153</height>
     </rect>
    </property>
+   <property name="autoFillBackground">
+    <bool>true</bool>
+   </property>
    <property name="frameShape">
-    <enum>QFrame::Box</enum>
+    <enum>QFrame::Panel</enum>
    </property>
    <property name="frameShadow">
     <enum>QFrame::Sunken</enum>
+   </property>
+   <property name="lineWidth">
+    <number>2</number>
    </property>
    <widget class="QPushButton" name="btn_applytoselect">
     <property name="geometry">
@@ -649,11 +638,17 @@
      <height>162</height>
     </rect>
    </property>
+   <property name="autoFillBackground">
+    <bool>true</bool>
+   </property>
    <property name="frameShape">
-    <enum>QFrame::Box</enum>
+    <enum>QFrame::Panel</enum>
    </property>
    <property name="frameShadow">
     <enum>QFrame::Sunken</enum>
+   </property>
+   <property name="lineWidth">
+    <number>2</number>
    </property>
    <widget class="QCheckBox" name="ckb_setdefault">
     <property name="geometry">
@@ -773,8 +768,8 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>680</y>
+     <x>227</x>
+     <y>497</y>
      <width>111</width>
      <height>23</height>
     </rect>
@@ -792,7 +787,7 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>295</x>
+     <x>290</x>
      <y>401</y>
      <width>44</width>
      <height>25</height>
@@ -806,7 +801,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>462</y>
+     <y>460</y>
      <width>163</width>
      <height>25</height>
     </rect>
@@ -824,7 +819,7 @@
   <widget class="QPushButton" name="btn_vrt_from_toc">
    <property name="geometry">
     <rect>
-     <x>19</x>
+     <x>20</x>
      <y>431</y>
      <width>163</width>
      <height>25</height>
@@ -844,7 +839,7 @@
    <property name="geometry">
     <rect>
      <x>191</x>
-     <y>458</y>
+     <y>456</y>
      <width>100</width>
      <height>17</height>
     </rect>
@@ -857,7 +852,7 @@
    <property name="geometry">
     <rect>
      <x>191</x>
-     <y>477</y>
+     <y>475</y>
      <width>119</width>
      <height>17</height>
     </rect>
@@ -874,7 +869,7 @@
     <rect>
      <x>20</x>
      <y>500</y>
-     <width>71</width>
+     <width>36</width>
      <height>18</height>
     </rect>
    </property>
@@ -894,34 +889,6 @@
     <set>Qt::AlignCenter</set>
    </property>
   </widget>
-  <widget class="QPushButton" name="btn_clean_log">
-   <property name="geometry">
-    <rect>
-     <x>93</x>
-     <y>500</y>
-     <width>21</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <weight>50</weight>
-     <bold>false</bold>
-    </font>
-   </property>
-   <property name="tabletTracking">
-    <bool>false</bool>
-   </property>
-   <property name="toolTip">
-    <string>Clean Log</string>
-   </property>
-   <property name="text">
-    <string>X</string>
-   </property>
-   <property name="default">
-    <bool>true</bool>
-   </property>
-  </widget>
   <widget class="QPushButton" name="btn_addlidar">
    <property name="geometry">
     <rect>
@@ -938,6 +905,57 @@
     <bool>true</bool>
    </property>
   </widget>
+  <widget class="QFrame" name="frame3">
+   <property name="geometry">
+    <rect>
+     <x>14</x>
+     <y>389</y>
+     <width>324</width>
+     <height>297</height>
+    </rect>
+   </property>
+   <property name="autoFillBackground">
+    <bool>true</bool>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Panel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Sunken</enum>
+   </property>
+   <property name="lineWidth">
+    <number>2</number>
+   </property>
+   <widget class="QPushButton" name="btn_clean_log">
+    <property name="geometry">
+     <rect>
+      <x>45</x>
+      <y>111</y>
+      <width>21</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="tabletTracking">
+     <bool>false</bool>
+    </property>
+    <property name="toolTip">
+     <string>Clean Log</string>
+    </property>
+    <property name="text">
+     <string>X</string>
+    </property>
+    <property name="default">
+     <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+  <zorder>frame3</zorder>
   <zorder>frame1</zorder>
   <zorder>mQgsProjectionSelectionWidget</zorder>
   <zorder>frame2</zorder>
@@ -957,9 +975,6 @@
   <zorder>destination_copy_dir</zorder>
   <zorder>cancelBtn</zorder>
   <zorder>progress_bar</zorder>
-  <zorder>line_4</zorder>
-  <zorder>label_8</zorder>
-  <zorder>line_5</zorder>
   <zorder>label_7</zorder>
   <zorder>textdisplay</zorder>
   <zorder>label_10</zorder>
@@ -970,10 +985,10 @@
   <zorder>radiobt_til_from_dir</zorder>
   <zorder>radiobtn_til_from_activelayers</zorder>
   <zorder>label_11</zorder>
-  <zorder>btn_clean_log</zorder>
   <zorder>btn_addlidar</zorder>
   <zorder>chk_addfile</zorder>
   <zorder>chk_vrtraster</zorder>
+  <zorder>label_8</zorder>
  </widget>
  <customwidgets>
   <customwidget>
