@@ -351,12 +351,18 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
                 time.sleep(0.5)
                 # manage raster projection by input user
                 if self.FieldEPSG_CBox.isEnabled():
-                    my_new_vrt.setCrs(QgsCoordinateReferenceSystem(feature[self.get_user_input()[5]], QgsCoordinateReferenceSystem.EpsgCrsId))
+                    try:
+                        my_new_vrt.setCrs(QgsCoordinateReferenceSystem(feature[self.get_user_input()[5]], QgsCoordinateReferenceSystem.EpsgCrsId))
+                    except:
+                        self.textdisplay.append("Error reading EPSG input. EPSG code not set")
                 else:
-                    if self.get_user_input()[5].isValid():
-                        my_new_vrt.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
-                    else: 
-                        pass
+                    try:
+                        if self.get_user_input()[5].isValid():
+                            my_new_vrt.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
+                        else: 
+                            self.textdisplay.append("Invalid EPSG input. EPSG code not set")
+                    except:
+                        self.textdisplay.append("Error reading EPSG input. EPSG code not set")
                 
                 self.progress_bar.setValue(50)
                 time.sleep(0.5)
