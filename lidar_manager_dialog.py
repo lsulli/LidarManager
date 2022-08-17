@@ -73,6 +73,7 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         self.loadactivelayer_btn.clicked.connect(self.sel_active_layer)
         self.loadactivelayer_btn.clicked.connect(self.field_select)
         # constructor for apply bottom
+        self.btn_addlidar.clicked.connect(self.LoadLidarFromShape)
         self.btn_applytoselect.setToolTip("Apply hlsd to select")
         self.btn_applytoselect.clicked.connect(self.apply_az_elev_zfactor)
         self.btn_default_value_hlsd.clicked.connect(self.default_value_hlsd)
@@ -84,7 +85,6 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         self.btn_create_tileindex.clicked.connect(self.create_til)
         self.btn_clean_log.clicked.connect(self.clear_log)
         self.cancelBtn.clicked.connect(self.reject)
-        self.btn_addlidar.clicked.connect(self.LoadLidarFromShape)
         self.AzimutDial.valueChanged.connect(self.changeAzimutSpinBox)
         self.AzimutSpinBox.valueChanged.connect(self.changeAzimutDial)
         self.ElevationSlider.valueChanged.connect(self.changeElevationSpinBox)
@@ -284,110 +284,110 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         """Load Lidar as file or Virtual Raster from feature selection in tile index layer and apply hillshading setting.
         ------------------------- """
         self.textdisplay.clear()
-        
-        if self.chk_help.isChecked():
-            self.textdisplay.append('Help: ' + self.LoadLidarFromShape.__doc__)
-        my_selection=self.get_user_input()[0].selectedFeatures()# get selection from input layer
-        vprovider=self.get_user_input()[0].dataProvider()
-        mytot_selection=len(my_selection) # count selection to manage output message
-
-        #set name for vrt if checked
-        if self.chk_vrtraster.isChecked():
-            my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
-            my_vrt = 'Vrt_'+my_date_time_str+'.vrt'
-            vrt_path = os.path.join(MY_DEFAULT_DESTDIR, my_vrt)
-            my_dtm_list_vrt = []
-            
-        my_count = 0
-        my_count_none = 0
-        
-        if mytot_selection == 0:
-            self.textdisplay.append("No feature selection in Layer: " + self.get_user_input()[0].name()+ ' - exit')
-        else: 
-            if self.chk_addfile.isChecked():
-                self.textdisplay.setText("Start load LIDAR file")
-            # add lidar from path field in features selection
-            for feature in my_selection:
-                my_count=my_count+1
-                #check if file exist and is a QgsRasterLayer (return None if is invalid)
-                try:
-                    rlyr=QgsRasterLayer(feature[self.get_user_input()[1]], os.path.basename(feature[self.get_user_input()[1]]))
-                except:
-                    rlyr=QgsRasterLayer('invalid_path', 'invalid_raster') #when error occur from selected feature create an invalid raster type to pass next one and manage the invalid one
-                
-                if not rlyr.isValid():
-                    my_count_none = my_count_none+1
-                else:
-                    if self.chk_vrtraster.isChecked():
-                        my_dtm_list_vrt.append(feature[self.get_user_input()[1]])
-                    if self.chk_addfile.isChecked():
-                        # add MapLayer to Project
-                        mlyr = QgsProject.instance().addMapLayer(rlyr)
-                    # manage raster projection by input user
-                        if self.FieldEPSG_CBox.isEnabled():
-                            mlyr.setCrs(QgsCoordinateReferenceSystem(feature[self.get_user_input()[5]], QgsCoordinateReferenceSystem.EpsgCrsId))
-                        else:
-                            if self.get_user_input()[5].isValid():
-                                mlyr.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
-                            else: 
-                                pass
-                        #set hillshading by input user
-                        r = QgsHillshadeRenderer (mlyr.dataProvider(), 1, self.get_user_input()[3], self.get_user_input()[4])
-                        r.setZFactor (self.get_user_input()[2])
-                        mlyr.setRenderer(r)
-                        # set progressbar and textdisplay when process is in progress
-                        self.progress_bar.setValue(1+int(my_count/mytot_selection*100))
-                        self.textdisplay.append(self.set_text_color(mlyr.name(), 2, 600))
-                        self.textdisplay.append(" add to project")
-            # create vrt file from path field in Tile Index File
-            if self.chk_vrtraster.isChecked():
-                self.textdisplay.append("Start create Virtual Raster file")
-            if self.chk_vrtraster.isChecked()and len(my_dtm_list_vrt)>0:
-                my_vrt_built = gdal.BuildVRT(vrt_path, my_dtm_list_vrt)
-                self.progress_bar.setValue(25)
-                my_vrt_built = None
-                my_new_vrt = self.iface.addRasterLayer(vrt_path, my_vrt)
-                self.progress_bar.setValue(50)
-                time.sleep(0.5)
-                # manage raster projection by input user
-                if self.FieldEPSG_CBox.isEnabled():
-                    try:
-                        my_new_vrt.setCrs(QgsCoordinateReferenceSystem(feature[self.get_user_input()[5]], QgsCoordinateReferenceSystem.EpsgCrsId))
-                    except:
-                        self.textdisplay.append("Error reading EPSG input. EPSG code not set")
-                else:
-                    try:
-                        if self.get_user_input()[5].isValid():
-                            my_new_vrt.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
-                        else: 
-                            self.textdisplay.append("Invalid EPSG input. EPSG code not set")
-                    except:
-                        self.textdisplay.append("Error reading EPSG input. EPSG code not set")
-                
-                self.progress_bar.setValue(50)
-                time.sleep(0.5)
-                vrt_r = QgsHillshadeRenderer (my_new_vrt.dataProvider(), 1, self.get_user_input()[3], self.get_user_input()[4])
-                vrt_r.setZFactor (self.get_user_input()[2])
-                my_new_vrt.setRenderer(vrt_r)
-                self.progress_bar.setValue(90)
-                time.sleep(0.5)
-                self.textdisplay.append("Create vrt file in default user folder: ")
-                self.textdisplay.append(self.set_text_color(vrt_path, 2, 600))
-                
-            # set progressbar and textdisplay when all processes have done
-            self.progress_bar.setValue(100)
-            if my_count_none>0:
-                self.textdisplay.append('Path field "' + self.get_user_input()[1]+'" return no raster type for ' +str(my_count_none) 
-                + ' record(s) of '+ str(len(my_selection))+ ' record(s) selected.')
-                if my_count_none == len(my_selection):
-                    self.textdisplay.append('Check type and attributes of selected field.')# display when all record are invalid
-            if not self.chk_vrtraster.isChecked()and not self.chk_addfile.isChecked():
-                self.textdisplay.append("No option add lidar/add vrt selected.")
-            else:
-                self.textdisplay.append("Done.")
+        if not self.chk_vrtraster.isChecked()and not self.chk_addfile.isChecked():
+            self.textdisplay.append("No option add lidar/add vrt selected.")
             time.sleep(0.5)
             self.progress_bar.setValue(0)
-            self.iface.setActiveLayer(self.get_user_input()[0])
+        else:
+            if self.chk_help.isChecked():
+                self.textdisplay.append('Help: ' + self.LoadLidarFromShape.__doc__)
+            my_selection=self.get_user_input()[0].selectedFeatures()# get selection from input layer
+            mytot_selection=len(my_selection) # count selection to manage output message
+            
+            if mytot_selection > 12:
+                self.textdisplay.append(str(mytot_selection) + ' tile features selected. Process may take long time')
+            #set name for vrt if checked
+            if self.chk_vrtraster.isChecked():
+                my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
+                my_vrt = 'Vrt_'+my_date_time_str+'.vrt'
+                vrt_path = os.path.join(MY_DEFAULT_DESTDIR, my_vrt)
+                my_dtm_list_vrt = []
+                
+            my_count = 0
+            my_count_none = 0
+            
+            if mytot_selection == 0:
+                self.textdisplay.append("No feature selection in Layer: " + self.get_user_input()[0].name()+ ' - exit')
+            else: 
+                if self.chk_addfile.isChecked():
+                    self.textdisplay.append("Start load LIDAR file")
+                # add lidar from path field in features selection
+                for feature in my_selection:
+                    my_count=my_count+1
+                    #check if file exist and is a QgsRasterLayer (return None if is invalid)
+                    try:
+                        rlyr=QgsRasterLayer(feature[self.get_user_input()[1]], os.path.basename(feature[self.get_user_input()[1]]))
+                    except:
+                        rlyr=QgsRasterLayer('invalid_path', 'invalid_raster') #when error occur from selected feature create an invalid raster type to pass next one and manage the invalid one
+                    
+                    if not rlyr.isValid():
+                        my_count_none = my_count_none+1
+                    else:
+                        if self.chk_vrtraster.isChecked():
+                            my_dtm_list_vrt.append(feature[self.get_user_input()[1]])
+                        if self.chk_addfile.isChecked():
+                            # add MapLayer to Project
+                            mlyr = QgsProject.instance().addMapLayer(rlyr)
+                        # manage raster projection by input user
+                            if self.FieldEPSG_CBox.isEnabled():
+                                mlyr.setCrs(QgsCoordinateReferenceSystem(feature[self.get_user_input()[5]], QgsCoordinateReferenceSystem.EpsgCrsId))
+                            else:
+                                if self.get_user_input()[5].isValid():
+                                    mlyr.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
+                                else: 
+                                    pass
+                            #set hillshading by input user
+                            r = QgsHillshadeRenderer (mlyr.dataProvider(), 1, self.get_user_input()[3], self.get_user_input()[4])
+                            r.setZFactor (self.get_user_input()[2])
+                            mlyr.setRenderer(r)
+                            # set progressbar and textdisplay when process is in progress
+                            self.progress_bar.setValue(1+int(my_count/mytot_selection*100))
+                            self.textdisplay.append(self.set_text_color(mlyr.name(), 2, 600))
+                            self.textdisplay.append(" add to project")
+                # create vrt file from path field in Tile Index File
+                if self.chk_vrtraster.isChecked()and len(my_dtm_list_vrt)>0:
+                    self.textdisplay.append('Start create Virtual Raster file')
+                    my_vrt_built = gdal.BuildVRT(vrt_path, my_dtm_list_vrt)
+                    self.progress_bar.setValue(25)
+                    my_vrt_built = None
+                    my_new_vrt = self.iface.addRasterLayer(vrt_path, my_vrt)
+                    self.progress_bar.setValue(50)
+                    time.sleep(0.5)
+                    # manage raster projection by input user
+                    if self.FieldEPSG_CBox.isEnabled():
+                        try:
+                            my_new_vrt.setCrs(QgsCoordinateReferenceSystem(feature[self.get_user_input()[5]], QgsCoordinateReferenceSystem.EpsgCrsId))
+                        except:
+                            self.textdisplay.append("Error reading EPSG input. EPSG code not set")
+                    else:
+                        try:
+                            if self.get_user_input()[5].isValid():
+                                my_new_vrt.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
+                            else: 
+                                self.textdisplay.append("Invalid EPSG input. EPSG code not set")
+                        except:
+                            self.textdisplay.append("Error reading EPSG input. EPSG code not set")
+                    
+                    self.progress_bar.setValue(50)
+                    time.sleep(0.5)
+                    vrt_r = QgsHillshadeRenderer (my_new_vrt.dataProvider(), 1, self.get_user_input()[3], self.get_user_input()[4])
+                    vrt_r.setZFactor (self.get_user_input()[2])
+                    my_new_vrt.setRenderer(vrt_r)
+                    self.progress_bar.setValue(90)
+                    time.sleep(0.5)
+                    self.textdisplay.append("Create vrt file in default user folder: ")
+                    self.textdisplay.append(self.set_text_color(vrt_path, 2, 600))
+                    
+                # set progressbar and textdisplay when all processes have done
+                self.progress_bar.setValue(100)
+                if my_count_none>0:
+                    self.textdisplay.append('Path field "' + self.get_user_input()[1]+'" return no raster type for ' +str(my_count_none) 
+                    + ' record(s) of '+ str(len(my_selection))+ ' record(s) selected.')
+                    if my_count_none == len(my_selection):
+                        self.textdisplay.append('Check type and attributes of selected field.')# display when all record are invalid
+                time.sleep(0.5)
+                self.progress_bar.setValue(0)
+                self.iface.setActiveLayer(self.get_user_input()[0])
      
     def apply_az_elev_zfactor(self):
         """Apply azimut, elevation and z factor user input value to selected file/vrt lidar(s) 

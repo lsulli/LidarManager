@@ -111,8 +111,8 @@
   <widget class="QLabel" name="label_5">
    <property name="geometry">
     <rect>
-     <x>70</x>
-     <y>347</y>
+     <x>69</x>
+     <y>316</y>
      <width>55</width>
      <height>20</height>
     </rect>
@@ -171,8 +171,8 @@
   <widget class="QDial" name="AzimutDial">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>237</y>
+     <x>29</x>
+     <y>206</y>
      <width>95</width>
      <height>100</height>
     </rect>
@@ -214,8 +214,8 @@
   <widget class="QSpinBox" name="AzimutSpinBox">
    <property name="geometry">
     <rect>
-     <x>140</x>
-     <y>277</y>
+     <x>139</x>
+     <y>246</y>
      <width>50</width>
      <height>25</height>
     </rect>
@@ -239,8 +239,8 @@
   <widget class="QDoubleSpinBox" name="ZfactorSpinBox">
    <property name="geometry">
     <rect>
-     <x>120</x>
-     <y>345</y>
+     <x>119</x>
+     <y>314</y>
      <width>71</width>
      <height>25</height>
     </rect>
@@ -267,8 +267,8 @@
   <widget class="QSlider" name="ElevationSlider">
    <property name="geometry">
     <rect>
-     <x>232</x>
-     <y>239</y>
+     <x>231</x>
+     <y>208</y>
      <width>22</width>
      <height>92</height>
     </rect>
@@ -295,8 +295,8 @@
   <widget class="QSpinBox" name="ElevationSpinBox">
    <property name="geometry">
     <rect>
-     <x>270</x>
-     <y>277</y>
+     <x>269</x>
+     <y>246</y>
      <width>50</width>
      <height>25</height>
     </rect>
@@ -339,8 +339,8 @@
   <widget class="QLabel" name="label_7">
    <property name="geometry">
     <rect>
-     <x>90</x>
-     <y>217</y>
+     <x>89</x>
+     <y>186</y>
      <width>170</width>
      <height>17</height>
     </rect>
@@ -367,7 +367,7 @@
   <widget class="QPushButton" name="cancelBtn">
    <property name="geometry">
     <rect>
-     <x>256</x>
+     <x>240</x>
      <y>685</y>
      <width>91</width>
      <height>23</height>
@@ -406,8 +406,8 @@
   <widget class="QCheckBox" name="chk_addfile">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>180</y>
+     <x>44</x>
+     <y>349</y>
      <width>91</width>
      <height>23</height>
     </rect>
@@ -425,8 +425,8 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>120</x>
-     <y>180</y>
+     <x>134</x>
+     <y>349</y>
      <width>111</width>
      <height>23</height>
     </rect>
@@ -492,8 +492,8 @@
   <widget class="QFrame" name="frame2">
    <property name="geometry">
     <rect>
-     <x>15</x>
-     <y>223</y>
+     <x>14</x>
+     <y>192</y>
      <width>324</width>
      <height>153</height>
     </rect>
@@ -640,7 +640,7 @@
      <x>14</x>
      <y>16</y>
      <width>324</width>
-     <height>194</height>
+     <height>162</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -755,22 +755,6 @@
       <width>12</width>
       <height>16</height>
      </size>
-    </property>
-    <property name="default">
-     <bool>true</bool>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="btn_addlidar">
-    <property name="geometry">
-     <rect>
-      <x>255</x>
-      <y>164</y>
-      <width>61</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Add Lidar</string>
     </property>
     <property name="default">
      <bool>true</bool>
@@ -932,6 +916,22 @@
     <bool>true</bool>
    </property>
   </widget>
+  <widget class="QPushButton" name="btn_addlidar">
+   <property name="geometry">
+    <rect>
+     <x>248</x>
+     <y>350</y>
+     <width>61</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Add Lidar</string>
+   </property>
+   <property name="default">
+    <bool>true</bool>
+   </property>
+  </widget>
   <zorder>frame2_2</zorder>
   <zorder>mQgsProjectionSelectionWidget</zorder>
   <zorder>frame2</zorder>
@@ -951,8 +951,6 @@
   <zorder>destination_copy_dir</zorder>
   <zorder>cancelBtn</zorder>
   <zorder>progress_bar</zorder>
-  <zorder>chk_addfile</zorder>
-  <zorder>chk_vrtraster</zorder>
   <zorder>line_4</zorder>
   <zorder>label_8</zorder>
   <zorder>line_5</zorder>
@@ -967,6 +965,9 @@
   <zorder>radiobtn_til_from_activelayers</zorder>
   <zorder>label_11</zorder>
   <zorder>btn_clean_log</zorder>
+  <zorder>btn_addlidar</zorder>
+  <zorder>chk_addfile</zorder>
+  <zorder>chk_vrtraster</zorder>
  </widget>
  <customwidgets>
   <customwidget>
