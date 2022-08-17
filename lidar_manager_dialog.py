@@ -73,7 +73,7 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         self.loadactivelayer_btn.clicked.connect(self.sel_active_layer)
         self.loadactivelayer_btn.clicked.connect(self.field_select)
         # constructor for apply bottom
-        self.btn_addlidar.clicked.connect(self.LoadLidarFromShape)
+        self.btn_addlidar.clicked.connect(self.LoadLidarFromTIL)
         self.btn_applytoselect.setToolTip("Apply hlsd to select")
         self.btn_applytoselect.clicked.connect(self.apply_az_elev_zfactor)
         self.btn_default_value_hlsd.clicked.connect(self.default_value_hlsd)
@@ -280,10 +280,11 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             self.destination_copy_dir.setText(my_dir)
         return my_dir
     
-    def LoadLidarFromShape(self):
+    def LoadLidarFromTIL(self):
         """Load Lidar as file or Virtual Raster from feature selection in tile index layer and apply hillshading setting.
         ------------------------- """
         self.textdisplay.clear()
+
         if not self.chk_vrtraster.isChecked()and not self.chk_addfile.isChecked():
             self.textdisplay.append("No option add lidar/add vrt selected.")
             time.sleep(0.5)
@@ -297,14 +298,10 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             if mytot_selection > 12:
                 self.textdisplay.append(str(mytot_selection) + ' tile features selected. Process may take long time')
             #set name for vrt if checked
-            if self.chk_vrtraster.isChecked():
-                my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
-                my_vrt = 'Vrt_'+my_date_time_str+'.vrt'
-                vrt_path = os.path.join(MY_DEFAULT_DESTDIR, my_vrt)
-                my_dtm_list_vrt = []
                 
             my_count = 0
             my_count_none = 0
+            my_dtm_list_vrt = []
             
             if mytot_selection == 0:
                 self.textdisplay.append("No feature selection in Layer: " + self.get_user_input()[0].name()+ ' - exit')
@@ -347,6 +344,11 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
                 # create vrt file from path field in Tile Index File
                 if self.chk_vrtraster.isChecked()and len(my_dtm_list_vrt)>0:
                     self.textdisplay.append('Start create Virtual Raster file')
+                    #create vrt path file name 
+                    my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
+                    my_vrt = 'Vrt_'+my_date_time_str+'.vrt'
+                    vrt_path = os.path.join(MY_DEFAULT_DESTDIR, my_vrt)
+                    #built vrt file
                     my_vrt_built = gdal.BuildVRT(vrt_path, my_dtm_list_vrt)
                     self.progress_bar.setValue(25)
                     my_vrt_built = None
