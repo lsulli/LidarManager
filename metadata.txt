@@ -38,6 +38,7 @@ hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
 	2022.08.17 
+		Implement GUI TAB order and cleam some waste widget
 		Rename some function
 		Try to resolve slow output log with add lidar vrt type.  
 		Bug fixed for nonetype error. Improve Readme.md file with image		

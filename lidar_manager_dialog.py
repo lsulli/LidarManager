@@ -285,14 +285,14 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         ------------------------- """
         self.textdisplay.clear()
         my_dtm_list_vrt = []
+        if self.chk_help.isChecked():
+            self.textdisplay.append('Help: ' + self.LoadLidarFromShape.__doc__)
 
         if not self.chk_vrtraster.isChecked()and not self.chk_addfile.isChecked():
             self.textdisplay.append("No option add lidar/add vrt selected.")
             time.sleep(0.5)
             self.progress_bar.setValue(0)
         else:
-            if self.chk_help.isChecked():
-                self.textdisplay.append('Help: ' + self.LoadLidarFromShape.__doc__)
             my_selection=self.get_user_input()[0].selectedFeatures()# get selection from input layer
             mytot_selection=len(my_selection) # count selection to manage output message
             
