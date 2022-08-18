@@ -1,2 +1,2 @@
-cd C:\Users\l.sulli\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\lidarplugin
+cd C:\Users\l.sulli\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\LidarManager
 pyrcc5 -o resources.py resources.qrc

@@ -10,13 +10,13 @@
     <x>0</x>
     <y>0</y>
     <width>351</width>
-    <height>713</height>
+    <height>747</height>
    </rect>
   </property>
   <property name="maximumSize">
    <size>
     <width>351</width>
-    <height>713</height>
+    <height>747</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -51,19 +51,6 @@
    </property>
    <property name="alignment">
     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="btn_browse_dir">
-   <property name="geometry">
-    <rect>
-     <x>238</x>
-     <y>401</y>
-     <width>51</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Browse</string>
    </property>
   </widget>
   <widget class="QgsMapLayerComboBox" name="LayerBox">
@@ -331,7 +318,7 @@
     <rect>
      <x>20</x>
      <y>401</y>
-     <width>215</width>
+     <width>210</width>
      <height>25</height>
     </rect>
    </property>
@@ -376,8 +363,8 @@
   <widget class="QPushButton" name="cancelBtn">
    <property name="geometry">
     <rect>
-     <x>240</x>
-     <y>688</y>
+     <x>248</x>
+     <y>715</y>
      <width>91</width>
      <height>23</height>
     </rect>
@@ -768,7 +755,7 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>227</x>
+     <x>110</x>
      <y>497</y>
      <width>111</width>
      <height>23</height>
@@ -779,22 +766,6 @@
    </property>
    <property name="checked">
     <bool>false</bool>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="btn_copy_lidar">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>290</x>
-     <y>401</y>
-     <width>44</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Copy</string>
    </property>
   </widget>
   <widget class="QPushButton" name="btn_create_tileindex">
@@ -810,7 +781,7 @@
     <string/>
    </property>
    <property name="text">
-    <string>Create Tile Index </string>
+    <string>Create Tile Index Layer</string>
    </property>
    <property name="default">
     <bool>true</bool>
@@ -853,40 +824,15 @@
     <rect>
      <x>191</x>
      <y>475</y>
-     <width>119</width>
+     <width>76</width>
      <height>17</height>
     </rect>
    </property>
    <property name="text">
-    <string>From active layers</string>
+    <string>From TOC</string>
    </property>
    <property name="checked">
     <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_11">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>500</y>
-     <width>36</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Plain</enum>
-   </property>
-   <property name="midLineWidth">
-    <number>0</number>
-   </property>
-   <property name="text">
-    <string>Log</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
    </property>
   </widget>
   <widget class="QPushButton" name="btn_addlidar">
@@ -911,7 +857,7 @@
      <x>14</x>
      <y>389</y>
      <width>324</width>
-     <height>297</height>
+     <height>321</height>
     </rect>
    </property>
    <property name="autoFillBackground">
@@ -929,10 +875,10 @@
    <widget class="QPushButton" name="btn_clean_log">
     <property name="geometry">
      <rect>
-      <x>45</x>
-      <y>111</y>
-      <width>21</width>
-      <height>18</height>
+      <x>6</x>
+      <y>105</y>
+      <width>75</width>
+      <height>25</height>
      </rect>
     </property>
     <property name="font">
@@ -948,19 +894,84 @@
      <string>Clean Log</string>
     </property>
     <property name="text">
-     <string>X</string>
+     <string>Clean log</string>
     </property>
     <property name="default">
      <bool>true</bool>
     </property>
    </widget>
+   <widget class="QPushButton" name="btn_help">
+    <property name="geometry">
+     <rect>
+      <x>5</x>
+      <y>292</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Help</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_open_user_folder">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>105</y>
+      <width>98</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string/>
+    </property>
+    <property name="text">
+     <string>Open User Folder</string>
+    </property>
+    <property name="default">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_browse_dir">
+    <property name="geometry">
+     <rect>
+      <x>218</x>
+      <y>12</y>
+      <width>51</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Browse</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_copy_lidar">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>273</x>
+      <y>12</y>
+      <width>44</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Copy</string>
+    </property>
+   </widget>
+   <zorder>btn_help</zorder>
+   <zorder>btn_clean_log</zorder>
+   <zorder>btn_open_user_folder</zorder>
+   <zorder>btn_browse_dir</zorder>
+   <zorder>btn_copy_lidar</zorder>
   </widget>
   <zorder>frame3</zorder>
   <zorder>frame1</zorder>
   <zorder>mQgsProjectionSelectionWidget</zorder>
   <zorder>frame2</zorder>
   <zorder>label</zorder>
-  <zorder>btn_browse_dir</zorder>
   <zorder>LayerBox</zorder>
   <zorder>label_3</zorder>
   <zorder>label_4</zorder>
@@ -979,12 +990,10 @@
   <zorder>textdisplay</zorder>
   <zorder>label_10</zorder>
   <zorder>chk_help</zorder>
-  <zorder>btn_copy_lidar</zorder>
   <zorder>btn_create_tileindex</zorder>
   <zorder>btn_vrt_from_toc</zorder>
   <zorder>radiobt_til_from_dir</zorder>
   <zorder>radiobtn_til_from_activelayers</zorder>
-  <zorder>label_11</zorder>
   <zorder>btn_addlidar</zorder>
   <zorder>chk_addfile</zorder>
   <zorder>chk_vrtraster</zorder>
@@ -1029,8 +1038,10 @@
   <tabstop>radiobt_til_from_dir</tabstop>
   <tabstop>radiobtn_til_from_activelayers</tabstop>
   <tabstop>btn_clean_log</tabstop>
-  <tabstop>textdisplay</tabstop>
   <tabstop>chk_help</tabstop>
+  <tabstop>btn_open_user_folder</tabstop>
+  <tabstop>textdisplay</tabstop>
+  <tabstop>btn_help</tabstop>
   <tabstop>cancelBtn</tabstop>
  </tabstops>
  <resources/>

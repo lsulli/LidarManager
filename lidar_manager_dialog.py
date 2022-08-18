@@ -25,6 +25,7 @@ Manage LIDAR dataset in map canvas
 import os
 import time
 import shutil
+import webbrowser
 
 from qgis import processing
 from osgeo import gdal
@@ -40,11 +41,10 @@ from qgis.core import QgsHillshadeRenderer, QgsMapLayer, QgsRasterLayer, QgsAppl
 
 from qgis.gui import QgsEncodingFileDialog
 
-from .lidar_manager_help import LidarManagerHelp
-
 # constant variable
 USER_DIRECTORY = QgsApplication.qgisSettingsDirPath()  # save vrt file in user directory without user selection
 MY_DEFAULT_DESTDIR = os.path.join(USER_DIRECTORY, 'processing/outputs/').replace("\\", "/")
+MY_README_LINK = r'https://github.com/lsulli/LidarManagerPlugin/blob/main/README.md'
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'lidar_manager_dialog_base.ui'))
@@ -67,30 +67,33 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         self.LayerBox.setFilters(QgsMapLayerProxyModel.PolygonLayer)
         self.LayerBox.currentIndexChanged.connect(self.sel_epsg)
         self.LayerBox.currentIndexChanged.connect(self.field_select)
-        # constructor for load activer layer bottom
+        # constructor for button
         self.loadactivelayer_btn.setText("<<") # some GUI variable not set in QT Designer
         self.loadactivelayer_btn.setToolTip("Load active layer")
         self.loadactivelayer_btn.clicked.connect(self.sel_active_layer)
         self.loadactivelayer_btn.clicked.connect(self.field_select)
-        # constructor for apply bottom
         self.btn_addlidar.clicked.connect(self.load_lidar_from_til)
         self.btn_applytoselect.setToolTip("Apply hlsd to select")
         self.btn_applytoselect.clicked.connect(self.apply_az_elev_zfactor)
         self.btn_default_value_hlsd.clicked.connect(self.default_value_hlsd)
-        self.epsgfield_ckb.stateChanged.connect(self.sel_epsg)
-        self.ckb_setdefault.stateChanged.connect(self.initialize_widgets)
         self.btn_browse_dir.clicked.connect(lambda: self.browse_dir('copy_lidar'))
         self.btn_copy_lidar.clicked.connect(self.copy_lidar_from_layer)
         self.btn_vrt_from_toc.clicked.connect(self.vrt_from_toc)
         self.btn_create_tileindex.clicked.connect(self.create_til)
         self.btn_clean_log.clicked.connect(self.clear_log)
         self.cancelBtn.clicked.connect(self.reject)
+        self.btn_chk_field.clicked.connect(self.check_path)
+        self.btn_open_user_folder.clicked.connect(self.open_user_folder)
+        self.btn_help.clicked.connect(self.open_readme_md)
+        # constructor for check box
+        self.epsgfield_ckb.stateChanged.connect(self.sel_epsg)
+        self.ckb_setdefault.stateChanged.connect(self.initialize_widgets)
+        # constructor for Dial, Slider and SPinBox for elevatione and azimut
         self.AzimutDial.valueChanged.connect(self.changeAzimutSpinBox)
         self.AzimutSpinBox.valueChanged.connect(self.changeAzimutDial)
         self.ElevationSlider.valueChanged.connect(self.changeElevationSpinBox)
         self.ElevationSpinBox.valueChanged.connect(self.changeElevationSlider)
-        self.btn_chk_field.clicked.connect(self.check_path)
-
+        # constructor for QlineEdit
         self.destination_copy_dir.textChanged.connect(self.check_directory)
 
     def initialize_widgets(self, event):
@@ -286,7 +289,7 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         self.textdisplay.clear()
         my_dtm_list_vrt = []
         if self.chk_help.isChecked():
-            self.textdisplay.append('Help: ' + self.LoadLidarFromShape.__doc__)
+            self.textdisplay.append('Help: ' + self.load_lidar_from_til.__doc__)
 
         if not self.chk_vrtraster.isChecked()and not self.chk_addfile.isChecked():
             self.textdisplay.append("No option add lidar/add vrt selected.")
@@ -738,3 +741,29 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         time.sleep(0.5)
         self.textdisplay.append("Create vrt file in default user folder: ")
         self.textdisplay.append(self.set_text_color(vrt_path, 2, 600))
+
+    def open_user_folder(self):
+        """Open user folder directory in default OS file manager
+        --------------------------"""
+        self.textdisplay.clear()
+        if self.chk_help.isChecked():
+            self.textdisplay.setText('Help: ' + self.open_user_folder.__doc__)
+        try:
+            os.startfile(MY_DEFAULT_DESTDIR)
+        except:
+            self.textdisplay.append(MY_DEFAULT_DESTDIR + ' not exist')
+    
+    def open_readme_md(self):
+        """Open readme file in github plugin repository
+        --------------------------"""
+        self.textdisplay.clear()
+        if self.chk_help.isChecked():
+            self.textdisplay.setText('Help: ' + self.open_readme_md.__doc__)
+        try:
+            webbrowser.open(MY_README_LINK)
+            self.textdisplay.append('For complete help contents read readme.md file in github repository:')
+            self.textdisplay.append(self.set_text_color(MY_README_LINK, 0, 600))
+            self.textdisplay.append('it is opening in default OS web broswer')
+        except:
+            self.textdisplay.append(MY_README_LINK + ' not exist')
+            
