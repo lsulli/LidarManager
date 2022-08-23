@@ -675,7 +675,7 @@
      <string>Return</string>
     </property>
    </widget>
-   <widget class="QCheckBox" name="epsgfield_ckb">
+   <widget class="QCheckBox" name="ckb_epsgfield">
     <property name="geometry">
      <rect>
       <x>130</x>
@@ -1017,7 +1017,7 @@
   <tabstop>FieldPath_CBox</tabstop>
   <tabstop>btn_chk_field</tabstop>
   <tabstop>mQgsProjectionSelectionWidget</tabstop>
-  <tabstop>epsgfield_ckb</tabstop>
+  <tabstop>ckb_epsgfield</tabstop>
   <tabstop>FieldEPSG_CBox</tabstop>
   <tabstop>ckb_setdefault</tabstop>
   <tabstop>AzimutDial</tabstop>
