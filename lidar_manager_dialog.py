@@ -26,6 +26,7 @@ import os
 import time
 import shutil
 import webbrowser
+import msvcrt
 
 from qgis import processing
 from osgeo import gdal
@@ -36,7 +37,7 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMainWindow, QLabel
 from PyQt5.QtWidgets import QGridLayout, QWidget, QApplication, QDesktopWidget
 
-from qgis.core import QgsMapLayerProxyModel, QgsSettings, QgsCoordinateReferenceSystem, QgsProcessingFeedback
+from qgis.core import QgsMapLayerProxyModel, QgsSettings, QgsCoordinateReferenceSystem
 from qgis.core import QgsHillshadeRenderer, QgsMapLayer, QgsRasterLayer, QgsApplication, QgsMapLayerType, QgsProject
 
 from qgis.gui import QgsEncodingFileDialog
@@ -713,17 +714,17 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         self.textdisplay.append('write somenthing to test')
         
     def add_vrt_from_til (self, mylist):
-        self.textdisplay.append('\n Start create Virtual Raster File v1 \n')
+        self.textdisplay.append('Start create Virtual Raster (VRT) file \n')
         #create vrt path file name 
         my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
         my_vrt = 'Vrt_'+my_date_time_str+'.vrt'
         vrt_path = os.path.join(MY_DEFAULT_DESTDIR, my_vrt)
-        #built vrt file
-        my_vrt_built = gdal.BuildVRT(vrt_path, mylist)
-        self.progress_bar.setValue(25)
+        #built vrt file and return callback to show progress
+        my_vrt_built = gdal.BuildVRT(vrt_path, mylist, callback=self.progress_callback)
+        self.textdisplay.append('VRT created, waiting: add to project and set EPSG....\n')
         my_vrt_built = None
         my_new_vrt = self.iface.addRasterLayer(vrt_path, my_vrt)
-        self.progress_bar.setValue(50)
+        self.progress_bar.setValue(85)
         time.sleep(0.5)
         # manage raster projection by input user
         if self.ckb_epsgfield.isChecked():
@@ -738,15 +739,17 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             except:
                 self.textdisplay.append("Error reading EPSG input. EPSG code not set")
         
-        self.progress_bar.setValue(50)
+        self.progress_bar.setValue(90)
         time.sleep(0.5)
         vrt_r = QgsHillshadeRenderer (my_new_vrt.dataProvider(), 1, self.get_user_input()[3], self.get_user_input()[4])
         vrt_r.setZFactor (self.get_user_input()[2])
         my_new_vrt.setRenderer(vrt_r)
-        self.progress_bar.setValue(90)
+        self.progress_bar.setValue(100)
         time.sleep(0.5)
         self.textdisplay.append("Create vrt file in default user folder: ")
         self.textdisplay.append(self.set_text_color(vrt_path, 2, 600))
+        self.progress_bar.setValue(0)
+        
     
     def open_user_folder(self):
         """Open user folder directory in default OS file manager
@@ -772,42 +775,6 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             self.textdisplay.append('it is opening in default OS web broswer')
         except:
             self.textdisplay.append(MY_README_LINK + ' not exist')
-            
-    def add_vrt_from_til_v2(self, mylist):
-        self.progress_bar.setValue(10)
-        self.textdisplay.append('Start create Virtual Raster File v2')
         
-        #create vrt path file name 
-        my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
-        my_vrt = 'Vrt_'+my_date_time_str+'.vrt'
-        vrt_path = os.path.join(MY_DEFAULT_DESTDIR, my_vrt)
-        self.progress_bar.setValue(25)
-        #built vrt file
-        result = processing.run('gdal:buildvirtualraster', {'RESOLUTION': 1, 'INPUT': mylist,'OUTPUT':vrt_path, 'SEPARATE': False, 'PROJ_DIFFERENCE': True})
-        # get from dic the OUTPUT result
-        my_new_vrt=QgsRasterLayer(result['OUTPUT'], my_vrt)
-        self.progress_bar.setValue(50)
-        time.sleep(0.5)
-        # manage raster projection by input user
-        if self.ckb_epsgfield.isChecked():
-            self.textdisplay.append("To create Virtual Raster you have to use a unique EPSG source code, field option is not allowed")
-            self.textdisplay.append(("EPSG not set /n"))
-        else:
-            try:
-                if self.get_user_input()[5].isValid():
-                    my_new_vrt.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
-                else: 
-                    self.textdisplay.append("Invalid EPSG input. EPSG code not set")
-            except:
-                self.textdisplay.append("Error reading EPSG input. EPSG code not set")
-        
-        self.progress_bar.setValue(50)
-        time.sleep(0.5)
-        vrt_r = QgsHillshadeRenderer (my_new_vrt.dataProvider(), 1, self.get_user_input()[3], self.get_user_input()[4])
-        vrt_r.setZFactor (self.get_user_input()[2])
-        my_new_vrt.setRenderer(vrt_r)
-        QgsProject.instance().addMapLayer(my_new_vrt)
-        self.progress_bar.setValue(90)
-        time.sleep(0.5)
-        self.textdisplay.append("Create vrt file in default user folder: ")
-        self.textdisplay.append(self.set_text_color(vrt_path, 2, 600))
+    def progress_callback(self, complete, message, unknown):
+        self.progress_bar.setValue((complete*100)-20)

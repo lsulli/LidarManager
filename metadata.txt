@@ -6,7 +6,7 @@
 name=Lidar Manager
 qgisMinimumVersion=3.10
 description=Manage lidar (dtm/dsm) dataset from Tile Index Layer
-version=0.7.7
+version=0.7.8
 author=Lorenzo Sulli - Autorità di bacino distrettuale Appennino settentrionale
 email=l.sulli@appenninosettentrionale.it - lorenzo.sulli@gmail.com
 
@@ -37,6 +37,8 @@ repository=https://github.com/lsulli/LidarManagerPlugin
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
+	2022.08.25
+		Optimized progress bar in BuildVRT function with callback
 	2022.08.22 
 		output bug for processing.run(gdal:buildvirtualraster), return Float32 instead Float64 input. 
 		Replace with gdal module gdal.BulidVRT return Float64.
