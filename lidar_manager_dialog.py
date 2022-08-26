@@ -34,6 +34,7 @@ from osgeo import gdal
 from PyQt5 import uic
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMainWindow, QLabel
 from PyQt5.QtWidgets import QGridLayout, QWidget, QApplication, QDesktopWidget
 
@@ -43,6 +44,7 @@ from qgis.core import QgsHillshadeRenderer, QgsMapLayer, QgsRasterLayer, QgsAppl
 from qgis.gui import QgsEncodingFileDialog
 
 # constant variable
+MY_VERSION = '0.7.9'
 USER_DIRECTORY = QgsApplication.qgisSettingsDirPath()  # save vrt file in user directory without user selection
 MY_DEFAULT_DESTDIR = os.path.join(USER_DIRECTORY, 'processing/outputs/').replace("\\", "/")
 MY_README_LINK = r'https://github.com/lsulli/LidarManagerPlugin/blob/main/README.md'
@@ -55,6 +57,7 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
     def __init__(self, iface, parent=None):
         """Constructor."""
         super(LidarManagerDialog, self).__init__(parent)
+        #self.setWindowIcon(QIcon(":/plugins/LidarManager/icons/LidarManager.ico")) icon not show
         self.iface = iface
         self.setupUi(self)
         self.encoding = None
@@ -64,6 +67,8 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         qtRectangle.moveTopRight(TopRightPoint)
         qtRectangle.translate(-30,15)
         self.move(qtRectangle.topLeft())
+        # set title to QDialog
+        self.setWindowTitle("Lidar Manager - Ver. " + MY_VERSION)
         # constructor for LayerBox control
         self.LayerBox.setFilters(QgsMapLayerProxyModel.PolygonLayer)
         self.LayerBox.currentIndexChanged.connect(self.sel_epsg)
@@ -778,3 +783,91 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         
     def progress_callback(self, complete, message, unknown):
         self.progress_bar.setValue((complete*100)-20)
+        
+    def create_til_v2(self):
+        """Create a Tile Index Layer from active layers in TOC or from directory source
+        --------------------------"""
+        # manage log information
+        self.textdisplay.clear()
+        if self.chk_help.isChecked():
+            self.textdisplay.setText('Help: ' + self.create_til.__doc__)
+        
+        self.textdisplay.append('Start to create Tile Index Layer v2')
+        self.progress_bar.setValue(5)
+        
+        my_list_path_dtm=[]
+        my_count_files = 0
+        my_raster_count_none = 0
+        my_tot_raster_file=0
+        # tile index from selected lidar in TOC   
+        if self.radiobtn_til_from_activelayers.isChecked():
+            mylayers = self.iface.layerTreeView().selectedLayersRecursive()
+            for r in mylayers:
+                if r.type() == QgsMapLayerType.RasterLayer:
+                    my_list_path_dtm.append(r.publicSource())
+                else:
+                    my_raster_count_none = my_raster_count_none+1
+            my_text = 'No raster layer(s) active in TOC'
+        # tile index from lidar files in directory
+        else:
+            my_til_dir=self.browse_dir('til_dir')
+            # to manage color text in QTextEdit
+            dirText =  self.set_text_color(my_til_dir, 2, 600)
+            self.textdisplay.append('Read file to get tile from: ' + dirText + ' wait...')
+            #count file in directory and subdirectory
+            for folderName, subFolders, fileNames in os.walk(my_til_dir):
+                for f in fileNames:
+                    my_count_files=my_count_files+1
+            # check if is valid path for QgsRasterLayer and populate list to use in gdal:tileindex
+            for folderName, subFolders, fileNames in os.walk(my_til_dir):
+                for f in fileNames:
+                    rlyr=QgsRasterLayer(os.path.join(folderName,f), f)
+                    my_tot_raster_file=my_tot_raster_file+1
+                    if not rlyr.isValid():
+                        self.progress_bar.setValue(1+int(my_tot_raster_file/my_count_files*100))
+                        my_raster_count_none = my_raster_count_none+1 # useful to manage invalid raster file
+                    else:
+                        self.progress_bar.setValue(1+int(my_tot_raster_file/my_count_files*100))
+                        my_list_path_dtm.append(os.path.join(folderName,f))
+            my_text = 'No raster layer(s) in source directory'       
+        
+        if len (my_list_path_dtm)>5:
+            self.textdisplay.append("Read "+ str(len(my_list_path_dtm)) + " valid path in directory/subdirectory. Process may take long time...")
+            self.progress_bar.setValue(50)
+            time.sleep(0.5)
+        
+        if len (my_list_path_dtm)>0:
+            # use specific name and location to manage name output
+            my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
+            my_til = 'TIL_'+my_date_time_str+'.shp'
+            til_path = os.path.join(MY_DEFAULT_DESTDIR, my_til)
+            #Core process
+            processing.runAndLoadResults('gdal:tileindex', {'LAYERS': my_list_path_dtm,
+            'PATH_FIELD_NAME': 'PATH', 'ABSOLUTE_PATH':False,'OUTPUT':til_path})#'TEMPORARY_OUTPUT' to create a default temporary file
+            self.progress_bar.setValue(75)
+            #when load tile layer it is active, it faster to use it. Processing return a dict: need to get QgsVectorLayer from path
+            my_til_layer=self.iface.activeLayer()
+            
+            if self.ckb_epsgfield.isChecked():
+                my_text_prj = 'No EPSG set'
+            else:
+                if self.get_user_input()[5].isValid():
+                    my_til_layer.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
+                    my_text_prj=''
+                else:
+                    my_text_prj = 'No EPSG set'
+            
+            my_file_path_text = self.set_text_color(til_path, 2, 600)
+            self.textdisplay.append("Create Tile Index Layer in default user folder: " + my_file_path_text)
+            self.textdisplay.append(my_text_prj)
+            
+            if my_raster_count_none > 0:
+                self.textdisplay.append("Skip n. " + str(my_raster_count_none)+ " no raster layer(s)")
+        else:
+            self.textdisplay.append(my_text)
+            
+        self.progress_bar.setValue(100)
+        self.textdisplay.append('Done - Create Tile Index Layer')
+        time.sleep(0.5)
+        self.progress_bar.setValue(0)
+
