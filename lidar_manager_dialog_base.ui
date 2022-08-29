@@ -402,14 +402,14 @@
   <widget class="QCheckBox" name="chk_addfile">
    <property name="geometry">
     <rect>
-     <x>44</x>
+     <x>14</x>
      <y>349</y>
-     <width>91</width>
+     <width>85</width>
      <height>23</height>
     </rect>
    </property>
    <property name="text">
-    <string>add lidar files</string>
+    <string>add file(s)</string>
    </property>
    <property name="checked">
     <bool>true</bool>
@@ -421,9 +421,9 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>134</x>
+     <x>90</x>
      <y>349</y>
-     <width>111</width>
+     <width>105</width>
      <height>23</height>
     </rect>
    </property>
@@ -838,11 +838,17 @@
   <widget class="QPushButton" name="btn_addlidar">
    <property name="geometry">
     <rect>
-     <x>248</x>
-     <y>350</y>
-     <width>61</width>
+     <x>200</x>
+     <y>349</y>
+     <width>138</width>
      <height>25</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
    </property>
    <property name="text">
     <string>Add Lidar</string>
