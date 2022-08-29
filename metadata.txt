@@ -6,7 +6,7 @@
 name=Lidar Manager
 qgisMinimumVersion=3.10
 description=Manage lidar (dtm/dsm) dataset from Tile Index Layer
-version=0.7.9
+version=0.8.1
 author=Lorenzo Sulli - Autorità di bacino distrettuale Appennino settentrionale
 email=l.sulli@appenninosettentrionale.it - lorenzo.sulli@gmail.com
 
@@ -37,6 +37,10 @@ repository=https://github.com/lsulli/LidarManagerPlugin
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
+	2022.08.29
+		Optimized processing.run (gdal.tileindex)
+	2022.08.28
+		Optimized progress bar in BuildVRT function with callback
 	2022.08.25
 		Version in Qdialog Title
 		Optimized progress bar in BuildVRT function with callback
