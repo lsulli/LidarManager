@@ -44,14 +44,11 @@ class LidarManager:
         """
         # Save reference to the QGIS interface
         self.iface = iface
-              
         # Create the dialog (after translation) and keep reference
         self.dlg = LidarManagerDialog(iface)
         # self.dlg.setModal(True) # delete? work from ui 
         # self.dlg.setParent(self.iface.mainWindow()) # not working: set Qdialog trasparent 
         self.dlg.setWindowFlags(Qt.WindowStaysOnTopHint)# always on top - Problem: hide some qgis standard dialog 
-
-
 
     # add icon and menu item
 
