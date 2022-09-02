@@ -28,6 +28,8 @@ import shutil
 import webbrowser
 import msvcrt
 import traceback
+from time import sleep, perf_counter
+from threading import Thread
 
 from qgis import processing
 from osgeo import gdal
@@ -591,7 +593,8 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             my_list_path_dtm=[]
             my_count_files = 0
             my_raster_count_none = 0
-            my_tot_raster_file=0
+            my_raster_count_ok = 0
+            my_dtm_count = 0
             # tile index from selected lidar in TOC   
             if self.radiobtn_til_from_activelayers.isChecked():
                 mylayers = self.iface.layerTreeView().selectedLayersRecursive()
@@ -608,38 +611,39 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
                 dirText =  self.set_text_color(my_til_dir, 2, 600)
                 self.textdisplay.append('Read file to get tile from: ' + dirText + ' wait...')
                 self.textdisplay.append('')
-                #count file in directory and subdirectory
-                for folderName, subFolders, fileNames in os.walk(my_til_dir):
-                    for f in fileNames:
-                        my_count_files=my_count_files+1
                 # check if is valid path for QgsRasterLayer and populate list to use in gdal:tileindex
                 for folderName, subFolders, fileNames in os.walk(my_til_dir):
                     for f in fileNames:
+                        my_count_files=my_count_files+1
                         rlyr=QgsRasterLayer(os.path.join(folderName,f), f)
-                        my_tot_raster_file=my_tot_raster_file+1
                         if not rlyr.isValid():
-                            self.progress_bar.setValue(1+int(my_tot_raster_file/my_count_files*100))
                             my_raster_count_none = my_raster_count_none+1 # useful to manage invalid raster file
+                            self.progress_bar.setValue(1+int((my_raster_count_none+my_raster_count_ok)/my_count_files*100))
                         else:
-                            self.progress_bar.setValue(1+int(my_tot_raster_file/my_count_files*100))
+                            my_raster_count_ok=my_raster_count_ok+1
+                            self.progress_bar.setValue(1+int((my_raster_count_none+my_raster_count_ok)/my_count_files*100))
                             my_list_path_dtm.append(os.path.join(folderName,f))
                 my_text = 'No raster layer(s) in source directory'       
             
-            if len (my_list_path_dtm)>5:
+            if len (my_list_path_dtm)>15:
                 self.textdisplay.append("Read "+ str(len(my_list_path_dtm)) + " valid path in directory/subdirectory. Process may take long time...")
                 self.textdisplay.append('')
-                self.progress_bar.setValue(50)
                 time.sleep(0.5)
             # core processing
+            
+            self.progress_bar.setValue(0)
+            
             if len (my_list_path_dtm)>0:
                 # use specific name and location to manage name output
                 my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
-                my_til = 'TIL_'+my_date_time_str+'.shp'
+                my_til = 'TIL_'+my_date_time_str+'.gpkg'
                 til_path = os.path.join(MY_DEFAULT_DESTDIR, my_til)
                 #Core process. NB: QgsProcessingFeedback not run with gdal:tileindex
-                result = processing.run('gdal:tileindex', {'LAYERS': my_list_path_dtm,
-                'PATH_FIELD_NAME': 'PATH', 'ABSOLUTE_PATH':False,'OUTPUT':til_path})#'TEMPORARY_OUTPUT' to create a default temporary file
-                self.progress_bar.setValue(75)
+                for path_dtm in my_list_path_dtm:
+                    my_dtm_count = my_dtm_count +1
+                    result = processing.run('gdal:tileindex', {'LAYERS': path_dtm,
+                    'PATH_FIELD_NAME': 'PATH', 'ABSOLUTE_PATH':False,'OUTPUT':til_path})#'TEMPORARY_OUTPUT' to create a default temporary file
+                    self.progress_bar.setValue(1+int(my_dtm_count/len(my_list_path_dtm)*100))
                 my_til_layer=QgsVectorLayer(result['OUTPUT'], os.path.splitext(my_til)[0])
 
                 if self.ckb_epsgfield.isChecked():
