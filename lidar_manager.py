@@ -70,8 +70,15 @@ class LidarManager:
 
     def run(self):
         """Run method that performs just show dialog"""
-        # show the dialog
+        # show the dialog if not visible
         if not self.dlg.isVisible():
             self.dlg.show()
             self.dlg.textdisplay.clear()
             self.dlg.destination_copy_dir.setText('Input dir to copy lidar(s)')
+        # show the dioalog normal if minimized
+        if self.dlg.isMinimized():
+            print ('123')
+            self.dlg.showNormal()
+        #set focus to add lidar btn
+        self.dlg.btn_addlidar.setFocus()
+   

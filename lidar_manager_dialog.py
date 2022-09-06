@@ -29,7 +29,8 @@ import webbrowser
 import msvcrt
 import traceback
 from time import sleep, perf_counter
-from threading import Thread
+import threading
+import queue
 
 from qgis import processing
 from osgeo import gdal
@@ -47,13 +48,14 @@ from qgis.core import QgsHillshadeRenderer, QgsMapLayer, QgsRasterLayer, QgsVect
 from qgis.gui import QgsEncodingFileDialog
 
 # constant variable
-MY_VERSION = '0.8.4'
+MY_VERSION = '0.8.8'
 # qet default user directory set by Qgis
 USER_DIRECTORY = QgsApplication.qgisSettingsDirPath()
 # set default destination directory to output file. User can't change destination directory, it's semplify gui interaction
 MY_DEFAULT_DESTDIR = os.path.join(USER_DIRECTORY, 'processing/outputs/').replace("\\", "/")# set default destination directory to output file
 # variable with help page in github
 MY_README_LINK = r'https://github.com/lsulli/LidarManagerPlugin/blob/main/README.md'
+
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'lidar_manager_dialog_base.ui'))
@@ -316,48 +318,52 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         my_dir = QtWidgets.QFileDialog.getExistingDirectory(self, my_dir_tile, dirName, QtWidgets.QFileDialog.ShowDirsOnly)
         if dir_type == 'copy_lidar':
             self.destination_copy_dir.setText(my_dir)
-        return my_dir
+        else:
+            return my_dir
     
 
     def apply_az_elev_zfactor(self):
-        my_err_layers = 0
-        my_ok_layers = 0
-        mylayers = self.iface.layerTreeView().selectedLayersRecursive()
         """Apply azimut, elevation and z factor user input value to selected file/vrt lidar(s) 
         -------------------------"""
-        self.textdisplay.clear()
-        if self.chk_help.isChecked():
-            self.textdisplay.append('Help: ' + self.apply_az_elev_zfactor.__doc__)
-        mylayers_count = len(mylayers)
-        my_zfactorset = self.ZfactorSpinBox.value() 
-        my_azimut = self.AzimutSpinBox.value()
-        my_elevation = self.ElevationSpinBox.value()
+        try:
+            my_err_layers = 0
+            my_ok_layers = 0
+            mylayers = self.iface.layerTreeView().selectedLayersRecursive()
+            self.textdisplay.clear()
+            if self.chk_help.isChecked():
+                self.textdisplay.append('Help: ' + self.apply_az_elev_zfactor.__doc__)
+            mylayers_count = len(mylayers)
+            my_zfactorset = self.ZfactorSpinBox.value() 
+            my_azimut = self.AzimutSpinBox.value()
+            my_elevation = self.ElevationSpinBox.value()
 
-        for my_raster in mylayers:
-            if type(my_raster) is QgsRasterLayer:
-                r = QgsHillshadeRenderer(my_raster.dataProvider(), 1, my_azimut, my_elevation)
-                r.setZFactor(my_zfactorset)
-                my_raster.setRenderer(r)
-                my_ok_layers = my_ok_layers +1
-                self.progress_bar.setValue(1+int(my_ok_layers/mylayers_count*100))
-                self.textdisplay.append("Processing " + str(my_ok_layers) + " raster layer(s)")
+            for my_raster in mylayers:
+                if type(my_raster) is QgsRasterLayer:
+                    r = QgsHillshadeRenderer(my_raster.dataProvider(), 1, my_azimut, my_elevation)
+                    r.setZFactor(my_zfactorset)
+                    my_raster.setRenderer(r)
+                    my_ok_layers = my_ok_layers +1
+                    self.progress_bar.setValue(1+int(my_ok_layers/mylayers_count*100))
+                    # self.textdisplay.append("Processing n. " + str(my_ok_layers) + " raster layer (s) of " + str(mylayers_count))
+                else:
+                    my_err_layers = my_err_layers+1
+
+            time.sleep(0.2)
+            self.progress_bar.setValue(100)
+            self.iface.mapCanvas().refreshAllLayers()
+            if my_err_layers >0:
+                self.textdisplay.append("N. " + str(my_ok_layers) + " of " + str(mylayers_count) +" layer(s) processing. Selection counts n." + str(my_err_layers)
+                + " no grid o raster layers")
             else:
-                my_err_layers = my_err_layers+1
+                self.textdisplay.append("Done. N. " + str(my_ok_layers) + " of " + str(mylayers_count) +" layer(s) processing.")
+            time.sleep(0.2)
+            self.progress_bar.setValue(0)
+        except:
+            self.unexpected_error_message()
 
-        time.sleep(0.5)
-        self.progress_bar.setValue(100)
-        self.iface.mapCanvas().refreshAllLayers()
-        if my_err_layers >0:
-            self.textdisplay.append(str(my_ok_layers) + " layers processing. Selection counts " + str(my_err_layers)
-            + " no grid o raster layers")
-        else:
-            self.textdisplay.append("Done. " + str(my_ok_layers) + " layer(s) processing.")
-        time.sleep(0.5)
-        self.progress_bar.setValue(0)
     # function to test connect
     def def_test(self):
         QtWidgets.QMessageBox.warning(self, "Lidar_manager","funziona")
-        
         
     def check_path(self):
         """Check field selected in combo box to verify and report valid path file for all record
@@ -582,13 +588,13 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         """Create a Tile Index Layer from active layers in TOC or from directory source
         --------------------------"""
         try:
+            global my_vglobal_dtm_list_from_dir # to pass global variable inside function
             # manage log information
             self.textdisplay.clear()
             if self.chk_help.isChecked():
                 self.textdisplay.setText('Help: ' + self.create_til.__doc__)
             
             self.textdisplay.append('Creating Tile Index Layer, wait... \n')
-            self.progress_bar.setValue(5)
             
             my_list_path_dtm=[]
             my_count_files = 0
@@ -606,29 +612,12 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
                 my_text = 'No raster layer(s) active in TOC'
             # tile index from lidar files in directory
             else:
-                my_til_dir=self.browse_dir('til_dir')
-                # to manage color text in QTextEdit
-                dirText =  self.set_text_color(my_til_dir, 2, 600)
-                self.textdisplay.append('Read file to get tile from: ' + dirText + ' wait...')
-                self.textdisplay.append('')
-                # check if is valid path for QgsRasterLayer and populate list to use in gdal:tileindex
-                for folderName, subFolders, fileNames in os.walk(my_til_dir):
-                    for f in fileNames:
-                        my_count_files=my_count_files+1
-                        rlyr=QgsRasterLayer(os.path.join(folderName,f), f)
-                        if not rlyr.isValid():
-                            my_raster_count_none = my_raster_count_none+1 # useful to manage invalid raster file
-                            self.progress_bar.setValue(1+int((my_raster_count_none+my_raster_count_ok)/my_count_files*100))
-                        else:
-                            my_raster_count_ok=my_raster_count_ok+1
-                            self.progress_bar.setValue(1+int((my_raster_count_none+my_raster_count_ok)/my_count_files*100))
-                            my_list_path_dtm.append(os.path.join(folderName,f))
+                # manage by thread, get result with global variable
+                t1 = threading.Thread(target=self.get_dtm_path_from_dir())
+                t1.start()
+                t1.join()
+                my_list_path_dtm = my_vglobal_dtm_list_from_dir
                 my_text = 'No raster layer(s) in source directory'       
-            
-            if len (my_list_path_dtm)>15:
-                self.textdisplay.append("Read "+ str(len(my_list_path_dtm)) + " valid path in directory/subdirectory. Process may take long time...")
-                self.textdisplay.append('')
-                time.sleep(0.5)
             # core processing
             
             self.progress_bar.setValue(0)
@@ -669,6 +658,7 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             self.progress_bar.setValue(100)
             time.sleep(0.5)
             self.progress_bar.setValue(0)
+            del my_vglobal_dtm_list_from_dir # delete global variable
         except:
             self.unexpected_error_message()
       
@@ -832,3 +822,38 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
                 self.textdisplay.append(MY_README_LINK + ' not exist')
         except:
             self.unexpected_error_message()
+    def get_dtm_path_from_dir(self):
+        try:
+            global my_vglobal_dtm_list_from_dir
+            my_raster_count_none = 0
+            my_raster_count_ok = 0
+            my_count_files = 0
+            my_list_path_dtm = []
+            my_til_dir=self.browse_dir('til_dir')
+            # to manage color text in QTextEdit
+            dirText =  self.set_text_color(my_til_dir, 2, 600)
+            self.textdisplay.append('Read file to get tile from: ' + dirText + ' wait...')
+            self.textdisplay.append('')
+            # count file in dir
+            for folderName, subFolders, fileNames in os.walk(my_til_dir):
+                for f in fileNames:
+                    my_count_files=my_count_files+1
+            # check if is valid path for QgsRasterLayer and populate list to use in gdal:tileindex
+            for folderName, subFolders, fileNames in os.walk(my_til_dir):
+                for f in fileNames:
+                    rlyr=QgsRasterLayer(os.path.join(folderName,f), f)
+                    if not rlyr.isValid():
+                        my_raster_count_none = my_raster_count_none+1 # useful to manage invalid raster file
+                        self.progress_bar.setValue((my_raster_count_none+my_raster_count_ok)/my_count_files*100)
+                    else:
+                        my_raster_count_ok=my_raster_count_ok+1
+                        self.progress_bar.setValue((my_raster_count_none+my_raster_count_ok)/my_count_files*100)
+                        my_list_path_dtm.append(os.path.join(folderName,f))
+            print (my_list_path_dtm)
+            if len (my_list_path_dtm)>15:
+                self.textdisplay.append("Read "+ str(len(my_list_path_dtm)) + " valid path in directory/subdirectory. Process may take long time...")
+                self.textdisplay.append('')
+            my_vglobal_dtm_list_from_dir=my_list_path_dtm
+        except:
+            self.unexpected_error_message()
+
