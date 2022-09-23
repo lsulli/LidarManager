@@ -23,6 +23,7 @@ Manage LIDAR dataset in map canvas
 """
 
 import os
+from sys import exit
 import time
 import shutil
 import webbrowser
@@ -48,7 +49,7 @@ from qgis.core import QgsHillshadeRenderer, QgsMapLayer, QgsRasterLayer, QgsVect
 from qgis.gui import QgsEncodingFileDialog
 
 # constant variable
-MY_VERSION = '0.8.8'
+MY_VERSION = '0.8.9'
 # qet default user directory set by Qgis
 USER_DIRECTORY = QgsApplication.qgisSettingsDirPath()
 # set default destination directory to output file. User can't change destination directory, it's semplify gui interaction
@@ -86,7 +87,7 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         self.loadactivelayer_btn.setToolTip("Load active layer")
         self.loadactivelayer_btn.clicked.connect(self.sel_active_layer)
         self.loadactivelayer_btn.clicked.connect(self.field_select)
-        self.btn_addlidar.clicked.connect(self.load_lidar_from_til_core)
+        self.btn_addlidar.clicked.connect(self.load_lidar_from_til_core_vrt)
         self.btn_applytoselect.setToolTip("Apply hlsd to select")
         self.btn_applytoselect.clicked.connect(self.apply_az_elev_zfactor)
         self.btn_default_value_hlsd.clicked.connect(self.default_value_hlsd)
@@ -698,8 +699,8 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         except:
             self.unexpected_error_message()
         
-    def load_lidar_from_til_start(self):
-        """Load Lidar as file or Virtual Raster from feature selection in tile index layer and apply hillshading setting.
+    def load_lidar_from_til_start(self, file_vs_vrt):
+        """Load Lidar from feature selection in tile index layer and apply hillshading setting.
         ------------------------- """
         try:
             self.textdisplay.clear()
@@ -707,59 +708,41 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
                 self.textdisplay.append('Help: ' + self.load_lidar_from_til_start.__doc__ + '\n')
             my_selection=self.get_user_input()[0].selectedFeatures()# get selection from input layer
             mytot_selection=len(my_selection) # count selection to manage output message
-            if not self.chk_vrtraster.isChecked()and not self.chk_addfile.isChecked():
-                self.textdisplay.clear()
-                self.textdisplay.append("No option add lidar/add vrt selected. \n")
-                return 0, my_selection
+            if mytot_selection == 0:
+                self.textdisplay.append("No feature selection in Layer: " + self.get_user_input()[0].name()+ ' - exit \n')
             else:
-                if mytot_selection == 0:
-                    self.textdisplay.append("No feature selection in Layer: " + self.get_user_input()[0].name()+ ' - exit \n')
-                    return 1, my_selection
-                else: 
-                    if mytot_selection > 12:
-                        self.textdisplay.append(str(mytot_selection) + ' tile features selected. Process may take long time \n')
-                    if self.chk_addfile.isChecked()and self.chk_vrtraster.isChecked():
-                        self.textdisplay.append("Load LIDAR file(s) and create Virtual Raster File \n")
-                        return 2, my_selection
-                    elif self.chk_addfile.isChecked():
-                        self.textdisplay.append("Load LIDAR file(s)\n")
-                        return 3, my_selection
-                    elif self.chk_vrtraster.isChecked():
-                        # display test is manager by create_vrt_from_toc function
-                        return 4, my_selection
-            del my_selection, mytot_selection # after some test i want to be sure to reset variable 
+                if mytot_selection > 12:
+                    self.textdisplay.append(str(mytot_selection) + ' tile features selected. Process may take long time \n')
+            return my_selection
         except:
             self.unexpected_error_message()
     
-    def load_lidar_from_til_core(self):
-        """Load Lidar as file or Virtual Raster from feature selection in tile index layer and apply hillshading setting.
+    def load_lidar_from_til_core_file(self):
+        """Load Lidar as file from feature selection in tile index layer and apply hillshading setting.
         ------------------------- """
-        self.load_lidar_from_til_start()
-        
-        my_dtm_list_vrt = []
-        my_dtm_list_vrt_dic = []
-        error_flag = 0
-        my_count = 0
-        my_count_none = 0
+        try:
+            my_dtm_list_vrt = []
+            error_flag = 0
+            my_count = 0
+            my_count_none = 0
 
-        if self.load_lidar_from_til_start()[0] >= 2:
-            my_selection=self.load_lidar_from_til_start()[1]# get selection from input layer
-            mytot_selection=len(my_selection) # count selection to manage output message
-            # add single file lidar from path field in features selection
-            for feature in my_selection:
-                my_count=my_count+1
-                #check if file exist and is a QgsRasterLayer (return None if is invalid)
-                try:
-                    rlyr=QgsRasterLayer(feature[self.get_user_input()[1]], os.path.basename(feature[self.get_user_input()[1]]))
-                except:
-                    rlyr=QgsRasterLayer('invalid_path', 'invalid_raster') #when error occur from selected feature create an invalid raster type to pass next one and manage the invalid one
-                
-                if not rlyr.isValid():
-                    my_count_none = my_count_none+1
-                else:
-                    if self.chk_vrtraster.isChecked():
-                        my_dtm_list_vrt.append(feature[self.get_user_input()[1]])
-                    if self.chk_addfile.isChecked():
+            my_selection=self.load_lidar_from_til_start('file')# get selection from input layer
+            try:
+                mytot_selection=len(my_selection) # count selection to manage output message
+                # add single file lidar from path field in features selection
+                self.textdisplay.append("Load LIDAR file(s)\n")
+
+                for feature in my_selection:
+                    my_count=my_count+1
+                    #check if file exist and is a QgsRasterLayer (return None if is invalid)
+                    try:
+                        rlyr=QgsRasterLayer(feature[self.get_user_input()[1]], os.path.basename(feature[self.get_user_input()[1]]))
+                    except:
+                        rlyr=QgsRasterLayer('invalid_path', 'invalid_raster') #when error occur from selected feature create an invalid raster type to pass next one and manage the invalid one
+                    
+                    if not rlyr.isValid():
+                        my_count_none = my_count_none+1
+                    else:
                         # add MapLayer to Project
                         mlyr = QgsProject.instance().addMapLayer(rlyr)
                         # set progressbar and textdisplay when process is in progress
@@ -784,24 +767,26 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
                         r = QgsHillshadeRenderer (mlyr.dataProvider(), 1, self.get_user_input()[3], self.get_user_input()[4])
                         r.setZFactor (self.get_user_input()[2])
                         mlyr.setRenderer(r)
-            # create vrt file from path field in Tile Index File
-        if self.chk_vrtraster.isChecked() and len(my_dtm_list_vrt)>0:
-            self.create_vrt_from_til(my_dtm_list_vrt)
-        # set progressbar and textdisplay when all processes have done
-        self.progress_bar.setValue(100)
-        if my_count_none>0:
-            my_text = self.set_text_color(self.get_user_input()[1], 0, 600, 'italic')
-            self.textdisplay.append('Path field "' + my_text +'" return no raster type for ' +str(my_count_none) 
-            + ' record(s) of '+ str(len(my_selection))+ ' record(s) selected. \n')
-            if my_count_none == len(my_selection):
-                self.textdisplay.append('Check type and attributes of selected field.')# display when all record are invalid
-        if error_flag == 1: # run only when find at least one valid raster
-            self.textdisplay.append('\n EPSG not set or invalid') 
+                    # create vrt file from path field in Tile Index File
+                # set progressbar and textdisplay when all processes have done
+                self.progress_bar.setValue(100)
+                if my_count_none>0:
+                    my_text = self.set_text_color(self.get_user_input()[1], 0, 600, 'italic')
+                    self.textdisplay.append('Path field "' + my_text +'" return no raster type for ' +str(my_count_none) 
+                    + ' record(s) of '+ str(len(my_selection))+ ' record(s) selected. \n')
+                    if my_count_none == len(my_selection):
+                        self.textdisplay.append('Check type and attributes of selected field.')# display when all record are invalid
+                if error_flag == 1: # run only when find at least one valid raster
+                    self.textdisplay.append('\n EPSG not set or invalid') 
+                    
+                time.sleep(0.5)
+                self.progress_bar.setValue(0)
+                self.iface.setActiveLayer(self.get_user_input()[0])
+            except:
+                pass
+        except:
+            self.unexpected_error_message()
             
-        time.sleep(0.5)
-        self.progress_bar.setValue(0)
-        self.iface.setActiveLayer(self.get_user_input()[0])
-        
     def unexpected_error_message(self):
         self.textdisplay.append('Unexpected error. See stack traces: \n')
         self.textdisplay.append(''.join(traceback.format_exc()))
@@ -857,3 +842,47 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         except:
             self.unexpected_error_message()
 
+    def load_lidar_from_til_core_vrt(self):
+        """Load Lidar as Virtual Raster from feature selection in tile index layer and apply hillshading setting.
+        ------------------------- """
+        try:
+            my_dtm_list_vrt = []
+            error_flag = 0
+            my_count = 0
+            my_count_none = 0
+
+            my_selection=self.load_lidar_from_til_start('vrt')# get selection from input layer
+            try:
+                mytot_selection=len(my_selection) # count selection to manage output message
+            # add single file lidar from path field in features selection
+                for feature in my_selection:
+                    my_count=my_count+1
+                    #check if file exist and is a QgsRasterLayer (return None if is invalid)
+                    try:
+                        rlyr=QgsRasterLayer(feature[self.get_user_input()[1]], os.path.basename(feature[self.get_user_input()[1]]))
+                    except:
+                        rlyr=QgsRasterLayer('invalid_path', 'invalid_raster') #when error occur from selected feature create an invalid raster type to pass next one and manage the invalid one
+                    
+                    if not rlyr.isValid():
+                        my_count_none = my_count_none+1
+                    else:
+                        my_dtm_list_vrt.append(feature[self.get_user_input()[1]])
+                self.create_vrt_from_til(my_dtm_list_vrt)
+                # set progressbar and textdisplay when all processes have done
+                self.progress_bar.setValue(100)
+                if my_count_none>0:
+                    my_text = self.set_text_color(self.get_user_input()[1], 0, 600, 'italic')
+                    self.textdisplay.append('Path field "' + my_text +'" return no raster type for ' +str(my_count_none) 
+                    + ' record(s) of '+ str(len(my_selection))+ ' record(s) selected. \n')
+                    if my_count_none == len(my_selection):
+                        self.textdisplay.append('Check type and attributes of selected field.')# display when all record are invalid
+                if error_flag == 1: # run only when find at least one valid raster
+                    self.textdisplay.append('\n EPSG not set or invalid') 
+                    
+                time.sleep(0.5)
+                self.progress_bar.setValue(0)
+                self.iface.setActiveLayer(self.get_user_input()[0])
+            except:
+                pass
+        except:
+            self.unexpected_error_message()
