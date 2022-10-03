@@ -80,5 +80,5 @@ class LidarManager:
             print ('123')
             self.dlg.showNormal()
         #set focus to add lidar btn
-        self.dlg.btn_addlidar.setFocus()
+        self.dlg.btn_addlidar_file.setFocus()
    

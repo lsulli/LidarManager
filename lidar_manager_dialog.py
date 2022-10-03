@@ -49,7 +49,7 @@ from qgis.core import QgsHillshadeRenderer, QgsMapLayer, QgsRasterLayer, QgsVect
 from qgis.gui import QgsEncodingFileDialog
 
 # constant variable
-MY_VERSION = '0.8.9'
+MY_VERSION = '0.9.0'
 # qet default user directory set by Qgis
 USER_DIRECTORY = QgsApplication.qgisSettingsDirPath()
 # set default destination directory to output file. User can't change destination directory, it's semplify gui interaction
@@ -80,6 +80,7 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         self.setWindowTitle("Lidar Manager - Ver. " + MY_VERSION)
         # constructor for LayerBox control
         self.LayerBox.setFilters(QgsMapLayerProxyModel.PolygonLayer)
+        self.LayerBox.activated.connect(self.field_select)
         self.LayerBox.currentIndexChanged.connect(self.sel_epsg)
         self.LayerBox.currentIndexChanged.connect(self.field_select)
         # constructor for button
@@ -87,7 +88,8 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         self.loadactivelayer_btn.setToolTip("Load active layer")
         self.loadactivelayer_btn.clicked.connect(self.sel_active_layer)
         self.loadactivelayer_btn.clicked.connect(self.field_select)
-        self.btn_addlidar.clicked.connect(self.load_lidar_from_til_core_vrt)
+        self.btn_addlidar_vrt.clicked.connect(self.load_lidar_from_til_core_vrt)
+        self.btn_addlidar_file.clicked.connect(self.load_lidar_from_til_core_file)
         self.btn_applytoselect.setToolTip("Apply hlsd to select")
         self.btn_applytoselect.clicked.connect(self.apply_az_elev_zfactor)
         self.btn_default_value_hlsd.clicked.connect(self.default_value_hlsd)
@@ -852,7 +854,8 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             my_count_none = 0
 
             my_selection=self.load_lidar_from_til_start('vrt')# get selection from input layer
-            try:
+            #work only with no empty list
+            if my_selection:
                 mytot_selection=len(my_selection) # count selection to manage output message
             # add single file lidar from path field in features selection
                 for feature in my_selection:
@@ -882,7 +885,5 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
                 time.sleep(0.5)
                 self.progress_bar.setValue(0)
                 self.iface.setActiveLayer(self.get_user_input()[0])
-            except:
-                pass
         except:
             self.unexpected_error_message()
