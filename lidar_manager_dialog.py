@@ -23,6 +23,7 @@ Manage LIDAR dataset in map canvas
 """
 
 import os
+import subprocess
 from sys import exit
 import time
 import shutil
@@ -40,7 +41,7 @@ from PyQt5 import uic
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMainWindow, QLabel
+from PyQt5.QtWidgets import QMainWindow, QLabel, QMessageBox
 from PyQt5.QtWidgets import QGridLayout, QWidget, QApplication, QDesktopWidget
 
 from qgis.core import QgsMapLayerProxyModel, QgsSettings, QgsCoordinateReferenceSystem 
@@ -49,14 +50,15 @@ from qgis.core import QgsHillshadeRenderer, QgsMapLayer, QgsRasterLayer, QgsVect
 from qgis.gui import QgsEncodingFileDialog
 
 # constant variable
-MY_VERSION = '0.9.0'
+MY_VERSION = '0.9.3'
 # qet default user directory set by Qgis
 USER_DIRECTORY = QgsApplication.qgisSettingsDirPath()
 # set default destination directory to output file. User can't change destination directory, it's semplify gui interaction
 MY_DEFAULT_DESTDIR = os.path.join(USER_DIRECTORY, 'processing/outputs/').replace("\\", "/")# set default destination directory to output file
 # variable with help page in github
 MY_README_LINK = r'https://github.com/lsulli/LidarManagerPlugin/blob/main/README.md'
-
+# variable to osgeo4w shell
+CMD_OSGEO4W = os.environ.get('OSGEO4W_ROOT')+'\\OSGeo4W.bat'
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'lidar_manager_dialog_base.ui'))
@@ -70,7 +72,7 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         self.iface = iface
         self.setupUi(self)
         self.encoding = None
-        # move near top right of desktop screen
+        # move near top right of desktop main screen
         qtRectangle = self.frameGeometry()
         TopRightPoint = QDesktopWidget().availableGeometry().topRight()
         qtRectangle.moveTopRight(TopRightPoint)
@@ -96,7 +98,7 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         self.btn_browse_dir.clicked.connect(lambda: self.browse_dir('copy_lidar'))
         self.btn_copy_lidar.clicked.connect(self.copy_lidar_from_layer)
         self.btn_vrt_from_toc.clicked.connect(self.create_vrt_from_toc)
-        self.btn_create_tileindex.clicked.connect(self.create_til)
+        self.btn_create_tileindex.clicked.connect(self.create_til_v2)
         self.btn_clean_log.clicked.connect(self.clear_log)
         self.cancelBtn.clicked.connect(self.reject)
         self.btn_chk_field.clicked.connect(self.check_path)
@@ -520,37 +522,38 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             my_vrt = 'Vrt_'+my_date_time_str+'.vrt'
             vrt_path = os.path.join(MY_DEFAULT_DESTDIR, my_vrt)
             #built vrt file and return callback to show progress
-            my_vrt_built = gdal.BuildVRT(vrt_path, mylist, callback=self.progress_callback)
-            self.textdisplay.append('VRT created, add to project and set EPSG....\n')
-            my_vrt_built = None
-            my_new_vrt = self.iface.addRasterLayer(vrt_path, my_vrt)
-            self.progress_bar.setTextVisible(True)
-            self.progress_bar.setValue(85)
-            time.sleep(0.5)
-            # manage raster projection by input user
-            if self.ckb_epsgfield.isChecked():
-                self.textdisplay.append("To create VRT you have to use a unique EPSG source code, field option is not allowed")
-                self.textdisplay.append(("EPSG not set \n"))
-            else:
-                try:
-                    if self.get_user_input()[5].isValid():
-                        my_new_vrt.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
-                    else: 
-                        self.textdisplay.append("Invalid EPSG input. EPSG code not set")
-                except:
-                    self.textdisplay.append("Error reading EPSG input. EPSG code not set")
-            
-            self.progress_bar.setValue(90)
-            time.sleep(0.5)
-            vrt_r = QgsHillshadeRenderer (my_new_vrt.dataProvider(), 1, self.get_user_input()[3], self.get_user_input()[4])
-            vrt_r.setZFactor (self.get_user_input()[2])
-            my_new_vrt.setRenderer(vrt_r)
-            self.progress_bar.setValue(100)
-            time.sleep(0.5)
-            self.textdisplay.append("VRT file creted in default user folder: ")
-            self.textdisplay.append(self.set_text_color(vrt_path, 2, 600))
-            self.textdisplay.append('')
-            self.progress_bar.setValue(0)
+            if mylist:
+                my_vrt_built = gdal.BuildVRT(vrt_path, mylist, callback=self.progress_callback)
+                self.textdisplay.append('VRT created, add to project and set EPSG....\n')
+                my_vrt_built = None
+                my_new_vrt = self.iface.addRasterLayer(vrt_path, my_vrt)
+                self.progress_bar.setTextVisible(True)
+                self.progress_bar.setValue(85)
+                time.sleep(0.5)
+                # manage raster projection by input user
+                if self.ckb_epsgfield.isChecked():
+                    self.textdisplay.append("To create VRT you have to use a unique EPSG source code, field option is not allowed")
+                    self.textdisplay.append(("EPSG not set \n"))
+                else:
+                    try:
+                        if self.get_user_input()[5].isValid():
+                            my_new_vrt.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
+                        else: 
+                            self.textdisplay.append("Invalid EPSG input. EPSG code not set")
+                    except:
+                        self.textdisplay.append("Error reading EPSG input. EPSG code not set")
+                
+                self.progress_bar.setValue(90)
+                time.sleep(0.5)
+                vrt_r = QgsHillshadeRenderer (my_new_vrt.dataProvider(), 1, self.get_user_input()[3], self.get_user_input()[4])
+                vrt_r.setZFactor (self.get_user_input()[2])
+                my_new_vrt.setRenderer(vrt_r)
+                self.progress_bar.setValue(100)
+                time.sleep(0.5)
+                self.textdisplay.append("VRT file creted in default user folder: ")
+                self.textdisplay.append(self.set_text_color(vrt_path, 2, 600))
+                self.textdisplay.append('')
+                self.progress_bar.setValue(0)
         except:
             self.unexpected_error_message()
     
@@ -592,6 +595,9 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         --------------------------"""
         try:
             global my_vglobal_dtm_list_from_dir # to pass global variable inside function
+            start_time = time.time()
+            my_vglobal_dtm_list_from_dir = []
+            my_string_code_batch = ''
             # manage log information
             self.textdisplay.clear()
             if self.chk_help.isChecked():
@@ -604,23 +610,12 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             my_raster_count_none = 0
             my_raster_count_ok = 0
             my_dtm_count = 0
-            # tile index from selected lidar in TOC   
-            if self.radiobtn_til_from_activelayers.isChecked():
-                mylayers = self.iface.layerTreeView().selectedLayersRecursive()
-                for r in mylayers:
-                    if r.type() == QgsMapLayerType.RasterLayer:
-                        my_list_path_dtm.append(r.publicSource())
-                    else:
-                        my_raster_count_none = my_raster_count_none+1
-                my_text = 'No raster layer(s) active in TOC'
-            # tile index from lidar files in directory
-            else:
-                # manage by thread, get result with global variable
-                t1 = threading.Thread(target=self.get_dtm_path_from_dir())
-                t1.start()
-                t1.join()
-                my_list_path_dtm = my_vglobal_dtm_list_from_dir
-                my_text = 'No raster layer(s) in source directory'       
+            # manage by thread to be sure to complete getting list fron directory before start creting til 
+            # get result with global variable
+            t1 = threading.Thread(target=self.get_dtm_path_from_dir())
+            t1.start()
+            t1.join()
+            my_list_path_dtm = my_vglobal_dtm_list_from_dir
             # core processing
             
             self.progress_bar.setValue(0)
@@ -630,37 +625,36 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
                 my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
                 my_til = 'TIL_'+my_date_time_str+'.gpkg'
                 til_path = os.path.join(MY_DEFAULT_DESTDIR, my_til)
-                #Core process. NB: QgsProcessingFeedback not run with gdal:tileindex
-                for path_dtm in my_list_path_dtm:
-                    my_dtm_count = my_dtm_count +1
-                    result = processing.run('gdal:tileindex', {'LAYERS': path_dtm,
-                    'PATH_FIELD_NAME': 'PATH', 'ABSOLUTE_PATH':False,'OUTPUT':til_path})#'TEMPORARY_OUTPUT' to create a default temporary file
-                    self.progress_bar.setValue(1+int(my_dtm_count/len(my_list_path_dtm)*100))
-                my_til_layer=QgsVectorLayer(result['OUTPUT'], os.path.splitext(my_til)[0])
-
-                if self.ckb_epsgfield.isChecked():
-                    my_text_prj = 'No EPSG set'
-                else:
-                    if self.get_user_input()[5].isValid():
-                        my_til_layer.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
-                        my_text_prj=''
-                    else:
-                        my_text_prj = 'EPSG no set \n'
-                QgsProject.instance().addMapLayer(my_til_layer)
-                
-                my_file_path_text = self.set_text_color(til_path, 2, 600)
-                self.textdisplay.append("Tile Index Layer created in default user folder: " + my_file_path_text)
-                self.textdisplay.append('')
-                self.textdisplay.append(my_text_prj)
-                
                 if my_raster_count_none > 0:
                     self.textdisplay.append("Skip n. " + str(my_raster_count_none)+ " no raster layer(s) \n")
             else:
-                self.textdisplay.append(my_text)
+                self.textdisplay.append('No raster layer(s) in source directory')
                 
             self.progress_bar.setValue(100)
             time.sleep(0.5)
             self.progress_bar.setValue(0)
+            
+            # write a batch file and run it in osgeo4w shell
+            for a in my_vglobal_dtm_list_from_dir:
+                my_string_code_batch += 'gdaltindex '+ '-t_srs ' + str((self.get_user_input()[5]).authid()) + ' ' + til_path + ' ' + a +'\n'
+            cmd_file = os.path.join(MY_DEFAULT_DESTDIR, 'test3.bat')
+            f = open(os.path.join(cmd_file), 'w')
+            f.write(my_string_code_batch)
+            f.close()
+            
+            my_call = [CMD_OSGEO4W, cmd_file]
+            subprocess.run(my_call)
+            os.remove(cmd_file)
+            my_til_layer=QgsVectorLayer(til_path, os.path.basename(til_path))# check output name layer!!!!
+            QgsProject.instance().addMapLayer(my_til_layer)
+            
+            my_file_path_text = self.set_text_color(til_path, 2, 600)
+            self.textdisplay.append("Tile Index Layer created and loaded in project. Source in default user folder: " + my_file_path_text)
+            self.textdisplay.append('')
+            self.textdisplay.append ('Time process: ' + str(round ((time.time() - start_time),2)) + ' second(s)')
+            self.textdisplay.append('')
+
+            
             del my_vglobal_dtm_list_from_dir # delete global variable
         except:
             self.unexpected_error_message()
@@ -729,7 +723,7 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             my_count_none = 0
 
             my_selection=self.load_lidar_from_til_start('file')# get selection from input layer
-            try:
+            if my_selection:
                 mytot_selection=len(my_selection) # count selection to manage output message
                 # add single file lidar from path field in features selection
                 self.textdisplay.append("Load LIDAR file(s)\n")
@@ -784,8 +778,6 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
                 time.sleep(0.5)
                 self.progress_bar.setValue(0)
                 self.iface.setActiveLayer(self.get_user_input()[0])
-            except:
-                pass
         except:
             self.unexpected_error_message()
             
@@ -812,6 +804,7 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
     def get_dtm_path_from_dir(self):
         try:
             global my_vglobal_dtm_list_from_dir
+            my_vglobal_dtm_list_from_dir = []
             my_raster_count_none = 0
             my_raster_count_ok = 0
             my_count_files = 0
@@ -887,3 +880,92 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
                 self.iface.setActiveLayer(self.get_user_input()[0])
         except:
             self.unexpected_error_message()
+    
+    def create_til_v2(self):
+        """Create a Tile Index Layer from active layers in TOC or from directory source
+        --------------------------"""
+        try:
+            self.textdisplay.clear()
+            #get global variable for threading
+            global cmd_file
+            global til_path
+            cmd_file = ''
+            til_path = ''
+            
+            start_time = time.time()
+            
+            # manage creation of batch file and running in OSgeo4W by threading
+            
+            t1 = threading.Thread(target=self.file_batch_til()) # get global variable  til_path, cmd_file 
+            t2 = threading.Thread(target=self.osgeo4w_create_til(cmd_file))
+
+            t1.start()
+            t2.start()
+            t1.join()            
+            t2.join()            
+            
+            my_til_layer=QgsVectorLayer(til_path, os.path.basename(til_path))
+            QgsProject.instance().addMapLayer(my_til_layer)
+            
+            my_file_path_text = self.set_text_color(til_path, 2, 600)
+            self.textdisplay.append("Tile Index Layer created and loaded in project. Source in default user folder: " + my_file_path_text)
+            self.textdisplay.append('')
+            self.textdisplay.append ('Time process: ' + str(round ((time.time() - start_time),2)) + ' second(s)')
+            self.textdisplay.append('')
+            
+            #delete global variable
+            del cmd_file
+            del til_path
+            
+            self.progress_bar.setValue(100)
+            time.sleep(0.5)
+            self.progress_bar.setValue(0)
+
+        except:
+            self.unexpected_error_message()
+            
+    def osgeo4w_create_til(self,my_cmd_file):
+        my_call = [CMD_OSGEO4W, my_cmd_file]
+        subprocess.run(my_call)
+        os.remove(my_cmd_file)
+        
+    def file_batch_til(self):
+        global cmd_file
+        global til_path
+        cmd_file = ''
+        til_path = ''
+        
+        my_string_code_batch = ''
+        my_til_dir=self.browse_dir('til_dir')
+        # manage log information
+        self.textdisplay.clear()
+        if self.chk_help.isChecked():
+            self.textdisplay.setText('Help: ' + self.create_til.__doc__)
+        
+        self.textdisplay.append('Scan directory ' + my_til_dir + ' to create Tile Index Layer \n')
+        self.progress_bar.setValue(0)
+            # use specific name and location to manage name output
+        my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
+        my_til = 'TIL_'+my_date_time_str+'.gpkg'
+        til_path = os.path.join(MY_DEFAULT_DESTDIR, my_til)
+        
+        #walk in subdirectory and write batch for all file extension
+        for folderName, subFolders, fileNames in os.walk(my_til_dir):
+            for sf in subFolders:
+                my_string_code_batch += 'gdaltindex -t_srs ' + str((self.get_user_input()[5]).authid()) + ' ' + til_path + ' '+ os.path.join(folderName, sf)+'\\*.* \n'
+        # walk in root directory
+        my_string_code_batch += 'gdaltindex -t_srs ' + str((self.get_user_input()[5]).authid()) + ' ' + til_path + ' ' + my_til_dir + '\\*.* \n'
+        
+        cmd_file = os.path.join(MY_DEFAULT_DESTDIR, 'temp_'+my_date_time_str+'.bat')
+        f = open(os.path.join(cmd_file), 'w')
+        f.write(my_string_code_batch)
+        f.close()
+        
+        self.textdisplay.append ('Run batch file from OSGeo4w shell \n')
+        
+        # msg = QMessageBox()
+        # msg.setWindowTitle("Lidar Manager")
+        # msg.setIcon(QMessageBox.Information)        
+        # msg.setText("Starting OSGeo4W console!")
+        # msg.exec()
+

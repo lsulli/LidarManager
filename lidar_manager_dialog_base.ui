@@ -310,28 +310,6 @@
     <number>45</number>
    </property>
   </widget>
-  <widget class="QLineEdit" name="destination_copy_dir">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>401</y>
-     <width>210</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="toolTip">
-    <string>Path destination dir</string>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-   <property name="frame">
-    <bool>true</bool>
-   </property>
-  </widget>
   <widget class="QLabel" name="label_7">
    <property name="geometry">
     <rect>
@@ -575,7 +553,7 @@
     <number>0</number>
    </property>
    <property name="text">
-    <string>Tile Index layer setting</string>
+    <string>Tile Index Layer setting</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -733,73 +711,6 @@
     <bool>false</bool>
    </property>
   </widget>
-  <widget class="QPushButton" name="btn_create_tileindex">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>460</y>
-     <width>163</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="toolTip">
-    <string/>
-   </property>
-   <property name="text">
-    <string>Create Tile Index Layer</string>
-   </property>
-   <property name="default">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="btn_vrt_from_toc">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>431</y>
-     <width>163</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="toolTip">
-    <string/>
-   </property>
-   <property name="text">
-    <string>Create vrt file from TOC</string>
-   </property>
-   <property name="default">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="radiobt_til_from_dir">
-   <property name="geometry">
-    <rect>
-     <x>191</x>
-     <y>456</y>
-     <width>100</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>From directory</string>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="radiobtn_til_from_activelayers">
-   <property name="geometry">
-    <rect>
-     <x>191</x>
-     <y>475</y>
-     <width>76</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>From TOC</string>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-  </widget>
   <widget class="QPushButton" name="btn_addlidar_vrt">
    <property name="geometry">
     <rect>
@@ -906,8 +817,8 @@
    <widget class="QPushButton" name="btn_browse_dir">
     <property name="geometry">
      <rect>
-      <x>218</x>
-      <y>12</y>
+      <x>220</x>
+      <y>30</y>
       <width>51</width>
       <height>25</height>
      </rect>
@@ -923,7 +834,7 @@
     <property name="geometry">
      <rect>
       <x>273</x>
-      <y>12</y>
+      <y>30</y>
       <width>44</width>
       <height>25</height>
      </rect>
@@ -932,11 +843,116 @@
      <string>Copy</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="btn_vrt_from_toc">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>69</y>
+      <width>145</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string/>
+    </property>
+    <property name="text">
+     <string>Create vrt file from TOC</string>
+    </property>
+    <property name="default">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>12</y>
+      <width>131</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Copy lidar file to directory</string>
+    </property>
+   </widget>
+   <widget class="Line" name="line">
+    <property name="geometry">
+     <rect>
+      <x>11</x>
+      <y>62</y>
+      <width>300</width>
+      <height>3</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_create_tileindex">
+    <property name="geometry">
+     <rect>
+      <x>6</x>
+      <y>69</y>
+      <width>145</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string/>
+    </property>
+    <property name="text">
+     <string>Create TIL from directory</string>
+    </property>
+    <property name="default">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="Line" name="line_2">
+    <property name="geometry">
+     <rect>
+      <x>11</x>
+      <y>100</y>
+      <width>300</width>
+      <height>3</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="destination_copy_dir">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>8</x>
+      <y>30</y>
+      <width>210</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>Path destination dir</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="frame">
+     <bool>true</bool>
+    </property>
+   </widget>
    <zorder>btn_help</zorder>
    <zorder>btn_clean_log</zorder>
    <zorder>btn_open_user_folder</zorder>
    <zorder>btn_browse_dir</zorder>
    <zorder>btn_copy_lidar</zorder>
+   <zorder>btn_vrt_from_toc</zorder>
+   <zorder>label_2</zorder>
+   <zorder>line</zorder>
+   <zorder>btn_create_tileindex</zorder>
+   <zorder>line_2</zorder>
+   <zorder>destination_copy_dir</zorder>
   </widget>
   <widget class="QPushButton" name="btn_addlidar_file">
    <property name="geometry">
@@ -976,17 +992,12 @@
   <zorder>ZfactorSpinBox</zorder>
   <zorder>ElevationSlider</zorder>
   <zorder>ElevationSpinBox</zorder>
-  <zorder>destination_copy_dir</zorder>
   <zorder>cancelBtn</zorder>
   <zorder>progress_bar</zorder>
   <zorder>label_7</zorder>
   <zorder>textdisplay</zorder>
   <zorder>label_10</zorder>
   <zorder>chk_help</zorder>
-  <zorder>btn_create_tileindex</zorder>
-  <zorder>btn_vrt_from_toc</zorder>
-  <zorder>radiobt_til_from_dir</zorder>
-  <zorder>radiobtn_til_from_activelayers</zorder>
   <zorder>btn_addlidar_vrt</zorder>
   <zorder>label_8</zorder>
   <zorder>btn_addlidar_file</zorder>
@@ -1025,8 +1036,6 @@
   <tabstop>btn_copy_lidar</tabstop>
   <tabstop>btn_vrt_from_toc</tabstop>
   <tabstop>btn_create_tileindex</tabstop>
-  <tabstop>radiobt_til_from_dir</tabstop>
-  <tabstop>radiobtn_til_from_activelayers</tabstop>
   <tabstop>btn_clean_log</tabstop>
   <tabstop>chk_help</tabstop>
   <tabstop>btn_open_user_folder</tabstop>

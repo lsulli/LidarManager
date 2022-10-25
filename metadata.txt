@@ -6,7 +6,7 @@
 name=Lidar Manager
 qgisMinimumVersion=3.10
 description=Manage lidar (dtm/dsm) dataset from Tile Index Layer
-version=0.9.0
+version=0.9.1
 author=Lorenzo Sulli - Autorità di bacino distrettuale Appennino settentrionale
 email=l.sulli@appenninosettentrionale.it - lorenzo.sulli@gmail.com
 
@@ -37,7 +37,9 @@ repository=https://github.com/lsulli/LidarManagerPlugin
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
-	
+	2022.10.25 
+		Update function to create Til Layer from gdal command in osgeo4w shell
+		time porcessing very fast (about 4 sec for 130 tiles)!		
 	2022.10.03
 		add lidar btn duplicate to call indipendent function
 	2022.09.06

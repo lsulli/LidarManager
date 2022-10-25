@@ -22,6 +22,7 @@ Manage large LIDAR dataset in map canvas
  ***************************************************************************/
 """
 import os.path
+from qgis.core import QgsProject
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QMessageBox
@@ -74,10 +75,10 @@ class LidarManager:
         if not self.dlg.isVisible():
             self.dlg.show()
             self.dlg.textdisplay.clear()
-            self.dlg.destination_copy_dir.setText('Input dir to copy lidar(s)')
+            #set CRS as default from project
+            self.dlg.mQgsProjectionSelectionWidget.setCrs(QgsProject.instance().crs())
         # show the dioalog normal if minimized
         if self.dlg.isMinimized():
-            print ('123')
             self.dlg.showNormal()
         #set focus to add lidar btn
         self.dlg.btn_addlidar_file.setFocus()
