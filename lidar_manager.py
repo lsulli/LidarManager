@@ -76,7 +76,8 @@ class LidarManager:
             self.dlg.show()
             self.dlg.textdisplay.clear()
             #set CRS as default from project
-            self.dlg.mQgsProjectionSelectionWidget.setCrs(QgsProject.instance().crs())
+            if self.dlg.mQgsProjectionSelectionWidget.isEnabled():
+                self.dlg.mQgsProjectionSelectionWidget.setCrs(QgsProject.instance().crs())
         # show the dioalog normal if minimized
         if self.dlg.isMinimized():
             self.dlg.showNormal()

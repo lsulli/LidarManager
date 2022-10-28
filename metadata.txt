@@ -6,7 +6,7 @@
 name=Lidar Manager
 qgisMinimumVersion=3.10
 description=Manage lidar (dtm/dsm) dataset from Tile Index Layer
-version=0.9.1
+version=0.9.5
 author=Lorenzo Sulli - Autorità di bacino distrettuale Appennino settentrionale
 email=l.sulli@appenninosettentrionale.it - lorenzo.sulli@gmail.com
 
@@ -20,8 +20,8 @@ about=
 
 	Other Tools:
     	- copy LIDAR selected in Tile Index Layer to destination directory
-    	- create Tile Index Layer from directory/subdirectory or frome LIDAR in TOC and populate valid field path. NB use gdal:tileindex process, 
-		it's quite slow, to a very fast process and complete attribute you can use "Lidar Tile Maker" experimental plugin.
+    	- create Tile Index Layer from directory/subdirectory or frome LIDAR in TOC and populate valid field path. NB use gdaltileindex from OSGeo4w shell
+		it'very fast process but need OSGgeo4W shell active and in original directory istallation (OSGEO4W_ROOT enviromental system variable)
     	- create virtual raster file from LIDAR active in TOC
     	- check path field in Tile Index Layer to control valid path for raster
     	- interactive help string and log message
@@ -37,8 +37,10 @@ repository=https://github.com/lsulli/LidarManagerPlugin
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
+	2022.10.28
+		fix some bug in create_til and path string conversion
 	2022.10.25 
-		Update function to create Til Layer from gdal command in osgeo4w shell
+		Update function to create Til from gdal command in osgeo4w shell
 		time porcessing very fast (about 4 sec for 130 tiles)!		
 	2022.10.03
 		add lidar btn duplicate to call indipendent function
