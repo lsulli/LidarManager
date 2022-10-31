@@ -11,7 +11,7 @@ Set on the fly hillshading parameter and CRS.
 Change LIDAR hillshading setting in TOC.
 Other Tools: 
   - copy LIDAR selected in Tile Index Layer to destination directory
-  - create Tile Index Layer from directory (with subdirectory) or from active LIDAR in TOC and populate valid field path (use gdal:tileindex process)
+  - create Tile Index Layer from directory (with subdirectory) and populate valid field path (very fast: use OSGeo4W shell with gdaltileindex command)
   - create virtual raster file from LIDAR active in TOC
   - check path field in Tile Index Layer to control valid path for raster
   - interactive help string and log message
