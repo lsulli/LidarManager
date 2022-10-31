@@ -54,7 +54,7 @@ USER_DIRECTORY = QgsApplication.qgisSettingsDirPath()
 # set default destination directory to output file. User can't change destination directory, it's semplify gui interaction
 MY_DEFAULT_DESTDIR = str(pathlib.PurePath(os.path.join(USER_DIRECTORY, 'processing/outputs/')))# set default destination directory to output file
 # variable with help page in github
-MY_README_LINK = r'https://github.com/lsulli/LidarManagerPlugin/blob/main/README.md'
+MY_README_LINK = r'https://github.com/lsulli/LidarManager/blob/main/README.md'
 # variable to osgeo4w shell
 CMD_OSGEO4W = os.path.join(os.environ.get('OSGEO4W_ROOT'), 'OSGeo4W.bat')
 
@@ -837,7 +837,7 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             # manage creation of batch file and running in OSgeo4W by threading
             
             t1 = threading.Thread(target=self.file_batch_til()) # get global variable  til_path, cmd_file 
-            t2 = threading.Thread(target=self.osgeo4w_create_til(cmd_file))
+            t2 = threading.Thread(target=self.osgeo4w_run(cmd_file))
             t1.start()
             t2.start()
             t1.join()            
@@ -870,7 +870,7 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         except:
             self.unexpected_error_message()
             
-    def osgeo4w_create_til(self,my_cmd_file):
+    def osgeo4w_run(self,my_cmd_file):
         """run batch file created with file_batch_til() from OSGeo4W shell to crete TIL        
         --------------------------"""
         if (my_cmd_file):
@@ -911,3 +911,27 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
                 self.textdisplay.append ('Run batch file from OSGeo4w shell \n')
         
 
+    def file_batch_vrt(self, my_list):
+        global cmd_file
+        global vrt_path
+        cmd_file = ''
+        vrt_path = ''
+        my_string_code_batch = ''
+        
+        if (my_list):
+            self.progress_bar.setValue(0)
+                # use specific name and location to manage name output
+            my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
+            my_vrt = 'vrt_'+my_date_time_str+'.vrt'
+            vrt_path = os.path.join(MY_DEFAULT_DESTDIR, my_vrt)
+            
+            #get string path fil eform list
+            for a in my_list:
+                my_string_code_batch += 'gdalbuildvrt ' + til_path + ' "' + a + '" \n'
+            
+            cmd_file = os.path.join(MY_DEFAULT_DESTDIR, 'temp_'+my_date_time_str+'.bat')
+            f = open(os.path.join(cmd_file), 'w')
+            f.write(my_string_code_batch)
+            f.close()
+            
+            self.textdisplay.append ('Run batch file from OSGeo4w shell \n')
