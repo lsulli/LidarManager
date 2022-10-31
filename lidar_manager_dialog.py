@@ -515,10 +515,6 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             self.ZfactorSpinBox.setValue(1)
         except:
             self.unexpected_error_message()
-    
-    def test_layer(self):
-        """ function just to do something """
-        self.textdisplay.append('write somenthing to test')
         
     def create_vrt_from_til (self, mylist):
         try:
@@ -638,9 +634,6 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         """Load Lidar from feature selection in tile index layer and apply hillshading setting.
         ------------------------- """
         try:
-            self.textdisplay.clear()
-            if self.chk_help.isChecked():
-                self.textdisplay.append('Help: ' + self.load_lidar_from_til_start.__doc__ + '\n')
             my_selection=self.get_user_input()[0].selectedFeatures()# get selection from input layer
             mytot_selection=len(my_selection) # count selection to manage output message
             if mytot_selection == 0:
@@ -656,6 +649,10 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         """Load Lidar as file from feature selection in tile index layer and apply hillshading setting.
         ------------------------- """
         try:
+            self.textdisplay.clear()
+            if self.chk_help.isChecked():
+                self.textdisplay.setText('Help: ' + self.load_lidar_from_til_core_file.__doc__)
+            
             my_dtm_list_vrt = []
             error_flag = 0
             my_count = 0
@@ -780,6 +777,10 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         """Load Lidar as Virtual Raster from feature selection in tile index layer and apply hillshading setting.
         ------------------------- """
         try:
+            self.textdisplay.clear()
+            if self.chk_help.isChecked():
+                self.textdisplay.setText('Help: ' + self.load_lidar_from_til_core_vrt.__doc__)
+            
             my_dtm_list_vrt = []
             error_flag = 0
             my_count = 0
