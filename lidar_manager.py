@@ -74,7 +74,7 @@ class LidarManager:
         # show the dialog if not visible
         if not self.dlg.isVisible():
             self.dlg.show()
-            self.dlg.textdisplay.clear()
+            self.dlg.testedit_logdisplay.clear()
             #set CRS as default from project
             if self.dlg.mQgsProjectionSelectionWidget.isEnabled():
                 self.dlg.mQgsProjectionSelectionWidget.setCrs(QgsProject.instance().crs())

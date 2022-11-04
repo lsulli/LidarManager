@@ -47,13 +47,13 @@
     </rect>
    </property>
    <property name="text">
-    <string>Tile Index  layer LIDAR</string>
+    <string>Tile Index  Layer LIDAR</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
    </property>
   </widget>
-  <widget class="QgsMapLayerComboBox" name="LayerBox">
+  <widget class="QgsMapLayerComboBox" name="til_box">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -117,7 +117,7 @@
     <set>Qt::AlignCenter</set>
    </property>
   </widget>
-  <widget class="QComboBox" name="FieldPath_CBox">
+  <widget class="QComboBox" name="cbox_fieldpath">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -139,7 +139,7 @@
     </size>
    </property>
   </widget>
-  <widget class="QComboBox" name="FieldEPSG_CBox">
+  <widget class="QComboBox" name="cbox_field_epsg">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -161,7 +161,7 @@
     </size>
    </property>
   </widget>
-  <widget class="QDial" name="AzimutDial">
+  <widget class="QDial" name="dial_azimut">
    <property name="geometry">
     <rect>
      <x>29</x>
@@ -204,7 +204,7 @@
     <bool>true</bool>
    </property>
   </widget>
-  <widget class="QSpinBox" name="AzimutSpinBox">
+  <widget class="QSpinBox" name="spinbox_azimut">
    <property name="geometry">
     <rect>
      <x>139</x>
@@ -229,7 +229,7 @@
     <number>315</number>
    </property>
   </widget>
-  <widget class="QDoubleSpinBox" name="ZfactorSpinBox">
+  <widget class="QDoubleSpinBox" name="spinbox_zfactor">
    <property name="geometry">
     <rect>
      <x>119</x>
@@ -257,7 +257,7 @@
     <double>1.000000000000000</double>
    </property>
   </widget>
-  <widget class="QSlider" name="ElevationSlider">
+  <widget class="QSlider" name="slider_elevation">
    <property name="geometry">
     <rect>
      <x>231</x>
@@ -285,7 +285,7 @@
     <bool>true</bool>
    </property>
   </widget>
-  <widget class="QSpinBox" name="ElevationSpinBox">
+  <widget class="QSpinBox" name="spinbox_elevation">
    <property name="geometry">
     <rect>
      <x>269</x>
@@ -512,7 +512,7 @@
     </property>
    </widget>
   </widget>
-  <widget class="QTextEdit" name="textdisplay">
+  <widget class="QTextEdit" name="testedit_logdisplay">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -593,7 +593,7 @@
      <string>lock as default</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="loadactivelayer_btn">
+   <widget class="QPushButton" name="btn_loadactivelayer">
     <property name="geometry">
      <rect>
       <x>293</x>
@@ -920,7 +920,7 @@
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
-   <widget class="QLineEdit" name="destination_copy_dir">
+   <widget class="QLineEdit" name="line_edit_destination_copy_dir">
     <property name="enabled">
      <bool>true</bool>
     </property>
@@ -952,7 +952,7 @@
    <zorder>line</zorder>
    <zorder>btn_create_tileindex</zorder>
    <zorder>line_2</zorder>
-   <zorder>destination_copy_dir</zorder>
+   <zorder>line_edit_destination_copy_dir</zorder>
   </widget>
   <widget class="QPushButton" name="btn_addlidar_file">
    <property name="geometry">
@@ -981,21 +981,21 @@
   <zorder>mQgsProjectionSelectionWidget</zorder>
   <zorder>frame2</zorder>
   <zorder>label</zorder>
-  <zorder>LayerBox</zorder>
+  <zorder>til_box</zorder>
   <zorder>label_3</zorder>
   <zorder>label_4</zorder>
   <zorder>label_5</zorder>
-  <zorder>FieldPath_CBox</zorder>
-  <zorder>FieldEPSG_CBox</zorder>
-  <zorder>AzimutDial</zorder>
-  <zorder>AzimutSpinBox</zorder>
-  <zorder>ZfactorSpinBox</zorder>
-  <zorder>ElevationSlider</zorder>
-  <zorder>ElevationSpinBox</zorder>
+  <zorder>cbox_fieldpath</zorder>
+  <zorder>cbox_field_epsg</zorder>
+  <zorder>dial_azimut</zorder>
+  <zorder>spinbox_azimut</zorder>
+  <zorder>spinbox_zfactor</zorder>
+  <zorder>slider_elevation</zorder>
+  <zorder>spinbox_elevation</zorder>
   <zorder>cancelBtn</zorder>
   <zorder>progress_bar</zorder>
   <zorder>label_7</zorder>
-  <zorder>textdisplay</zorder>
+  <zorder>testedit_logdisplay</zorder>
   <zorder>label_10</zorder>
   <zorder>chk_help</zorder>
   <zorder>btn_addlidar_vrt</zorder>
@@ -1015,23 +1015,23 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>LayerBox</tabstop>
-  <tabstop>loadactivelayer_btn</tabstop>
-  <tabstop>FieldPath_CBox</tabstop>
+  <tabstop>til_box</tabstop>
+  <tabstop>btn_loadactivelayer</tabstop>
+  <tabstop>cbox_fieldpath</tabstop>
   <tabstop>btn_chk_field</tabstop>
   <tabstop>mQgsProjectionSelectionWidget</tabstop>
   <tabstop>ckb_epsgfield</tabstop>
-  <tabstop>FieldEPSG_CBox</tabstop>
+  <tabstop>cbox_field_epsg</tabstop>
   <tabstop>ckb_setdefault</tabstop>
-  <tabstop>AzimutDial</tabstop>
-  <tabstop>AzimutSpinBox</tabstop>
-  <tabstop>ElevationSlider</tabstop>
-  <tabstop>ElevationSpinBox</tabstop>
-  <tabstop>ZfactorSpinBox</tabstop>
+  <tabstop>dial_azimut</tabstop>
+  <tabstop>spinbox_azimut</tabstop>
+  <tabstop>slider_elevation</tabstop>
+  <tabstop>spinbox_elevation</tabstop>
+  <tabstop>spinbox_zfactor</tabstop>
   <tabstop>btn_default_value_hlsd</tabstop>
   <tabstop>btn_applytoselect</tabstop>
   <tabstop>btn_addlidar_vrt</tabstop>
-  <tabstop>destination_copy_dir</tabstop>
+  <tabstop>line_edit_destination_copy_dir</tabstop>
   <tabstop>btn_browse_dir</tabstop>
   <tabstop>btn_copy_lidar</tabstop>
   <tabstop>btn_vrt_from_toc</tabstop>
@@ -1039,7 +1039,7 @@
   <tabstop>btn_clean_log</tabstop>
   <tabstop>chk_help</tabstop>
   <tabstop>btn_open_user_folder</tabstop>
-  <tabstop>textdisplay</tabstop>
+  <tabstop>testedit_logdisplay</tabstop>
   <tabstop>btn_help</tabstop>
   <tabstop>cancelBtn</tabstop>
  </tabstops>

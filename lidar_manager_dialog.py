@@ -9,7 +9,7 @@ Manage LIDAR dataset in map canvas
         begin                : 2022-04-13
         git sha              : $Format:%H$
         copyright            : (C) 2022 by Lorenzo Sulli
-        email                : lorenzo.sulli@gmail.com
+        email                : l.sulli@appenninosettentrionale.it or lorenzo.sulli@gmail.com
  ***************************************************************************/
 
 /***************************************************************************
@@ -25,35 +25,31 @@ Manage LIDAR dataset in map canvas
 import os
 import subprocess
 import pathlib
-from sys import exit
 import time
 import shutil
 import webbrowser
 import traceback
 import threading
 
-from qgis import processing
 from osgeo import gdal
 
-from PyQt5 import uic
-from PyQt5 import QtWidgets
-from PyQt5 import QtCore
+from PyQt5 import uic, QtWidgets
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMainWindow, QLabel, QMessageBox
-from PyQt5.QtWidgets import QGridLayout, QWidget, QApplication, QDesktopWidget
 
-from qgis.core import QgsMapLayerProxyModel, QgsSettings, QgsCoordinateReferenceSystem 
-from qgis.core import QgsHillshadeRenderer, QgsMapLayer, QgsRasterLayer, QgsVectorLayer, QgsApplication, QgsMapLayerType, QgsProject
-
+from qgis.core import QgsMapLayerProxyModel, QgsSettings, QgsCoordinateReferenceSystem
+from qgis.core import QgsHillshadeRenderer, QgsMapLayer, QgsRasterLayer, QgsVectorLayer, QgsApplication
+from qgis.core import QgsMapLayerType, QgsProject
 from qgis.gui import QgsEncodingFileDialog
 
 # constant variable
-MY_VERSION = '0.9.5'
+MY_VERSION = '0.9.6'
 # qet default user directory set by Qgis
 USER_DIRECTORY = QgsApplication.qgisSettingsDirPath()
-# set default destination directory to output file. User can't change destination directory, it's semplify gui interaction
-MY_DEFAULT_DESTDIR = str(pathlib.PurePath(os.path.join(USER_DIRECTORY, 'processing/outputs/')))# set default destination directory to output file
-# variable with help page in github
+# set default destination directory to output file. User can't change destination directory,
+# it's simplify gui interaction
+# set default destination directory to output file
+MY_DEFAULT_DESTDIR = str(pathlib.PurePath(os.path.join(USER_DIRECTORY, 'processing/outputs/')))
+# variable with help page in gitHub
 MY_README_LINK = r'https://github.com/lsulli/LidarManager/blob/main/README.md'
 # variable to osgeo4w shell
 CMD_OSGEO4W = os.path.join(os.environ.get('OSGEO4W_ROOT'), 'OSGeo4W.bat')
@@ -61,34 +57,36 @@ CMD_OSGEO4W = os.path.join(os.environ.get('OSGEO4W_ROOT'), 'OSGeo4W.bat')
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'lidar_manager_dialog_base.ui'))
 
-class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
+
+class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
     """ Dialog class for Lidar Manager QGIS3 plugin """
+
     def __init__(self, iface, parent=None):
         """Constructor."""
         super(LidarManagerDialog, self).__init__(parent)
-        #self.setWindowIcon(QIcon(":/plugins/LidarManager/icons/LidarManager.ico")) icon not show
+        # self.setWindowIcon(QIcon(":/plugins/LidarManager/icons/LidarManager.ico")) icon not show
         self.iface = iface
         self.setupUi(self)
         self.encoding = None
         # move near top right of desktop main screen
-        qtRectangle = self.frameGeometry()
-        TopRightPoint = QDesktopWidget().availableGeometry().topRight()
-        qtRectangle.moveTopRight(TopRightPoint)
-        qtRectangle.translate(-30,15)
-        self.move(qtRectangle.topLeft())
+        qt_rectangle = self.frameGeometry()
+        top_right_point = QtWidgets.QDesktopWidget().availableGeometry().topRight()
+        qt_rectangle.moveTopRight(top_right_point)
+        qt_rectangle.translate(-30, 15)
+        self.move(qt_rectangle.topLeft())
         # set title to QDialog
         self.setWindowTitle("Lidar Manager - Ver. " + MY_VERSION)
-        # constructor for LayerBox control
-        self.LayerBox.setFilters(QgsMapLayerProxyModel.PolygonLayer)
-        self.LayerBox.activated.connect(self.field_select)
-        self.LayerBox.currentIndexChanged.connect(self.sel_epsg)
-        self.LayerBox.currentIndexChanged.connect(self.field_select)
+        # constructor for til_box control
+        self.til_box.setFilters(QgsMapLayerProxyModel.PolygonLayer)
+        self.til_box.activated.connect(self.field_select)
+        self.til_box.currentIndexChanged.connect(self.sel_epsg)
+        self.til_box.currentIndexChanged.connect(self.field_select)
         # constructor for button
-        self.loadactivelayer_btn.setText("<<") # some GUI variable not set in QT Designer
-        self.loadactivelayer_btn.setToolTip("Load active layer")
-        self.loadactivelayer_btn.clicked.connect(self.sel_active_layer)
-        self.loadactivelayer_btn.clicked.connect(self.field_select)
-        self.btn_addlidar_vrt.clicked.connect(self.load_lidar_from_til_core_vrt)
+        self.btn_loadactivelayer.setText("<<")  # some GUI variable not set in QT Designer
+        self.btn_loadactivelayer.setToolTip("Load active layer")
+        self.btn_loadactivelayer.clicked.connect(self.sel_active_layer)
+        self.btn_loadactivelayer.clicked.connect(self.field_select)
+        self.btn_addlidar_vrt.clicked.connect(self.create_vrt)
         self.btn_addlidar_file.clicked.connect(self.load_lidar_from_til_core_file)
         self.btn_applytoselect.setToolTip("Apply hlsd to select")
         self.btn_applytoselect.clicked.connect(self.apply_az_elev_zfactor)
@@ -106,232 +104,240 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         self.ckb_epsgfield.stateChanged.connect(self.sel_epsg)
         self.ckb_setdefault.stateChanged.connect(self.lock_as_default)
         # constructor for Dial, Slider and SPinBox for elevatione and azimut
-        self.AzimutDial.valueChanged.connect(self.changeAzimutSpinBox)
-        self.AzimutSpinBox.valueChanged.connect(self.changeAzimutDial)
-        self.ElevationSlider.valueChanged.connect(self.changeElevationSpinBox)
-        self.ElevationSpinBox.valueChanged.connect(self.changeElevationSlider)
+        self.dial_azimut.valueChanged.connect(self.change_spinbox_azimut)
+        self.spinbox_azimut.valueChanged.connect(self.change_dial_azimut)
+        self.slider_elevation.valueChanged.connect(self.change_spinbox_elevation)
+        self.spinbox_elevation.valueChanged.connect(self.change_slider_elevation)
         # constructor for QlineEdit
-        self.destination_copy_dir.textChanged.connect(self.check_directory)
+        self.line_edit_destination_copy_dir.textChanged.connect(self.check_directory)
 
-    def lock_as_default(self, event):
+    def lock_as_default(self):
         """Lock as default value the user input for Tile Index Layer 
         --------------------------"""
         try:
-            self.textdisplay.clear()
+            self.testedit_logdisplay.clear()
             if self.chk_help.isChecked():
-                self.textdisplay.setText('Help: ' + self.lock_as_default.__doc__)
+                self.testedit_logdisplay.setText('Help: ' + self.lock_as_default.__doc__)
             if self.ckb_setdefault.isChecked():
-                self.LayerBox.setEnabled(False)
-                self.FieldPath_CBox.setEnabled(False)
-                self.FieldEPSG_CBox.setEnabled(False)
+                self.til_box.setEnabled(False)
+                self.cbox_fieldpath.setEnabled(False)
+                self.cbox_field_epsg.setEnabled(False)
                 self.mQgsProjectionSelectionWidget.setEnabled(False)
-                self.FieldEPSG_CBox.setEnabled(False)
-                self.loadactivelayer_btn.setEnabled(False)
+                self.cbox_field_epsg.setEnabled(False)
+                self.btn_loadactivelayer.setEnabled(False)
                 self.ckb_epsgfield.setEnabled(False)
             else:
-                self.LayerBox.setEnabled(True)
-                self.FieldPath_CBox.setEnabled(True)
-                self.LayerBox.setFilters(QgsMapLayerProxyModel.PolygonLayer)
+                self.til_box.setEnabled(True)
+                self.cbox_fieldpath.setEnabled(True)
+                self.til_box.setFilters(QgsMapLayerProxyModel.PolygonLayer)
                 self.mQgsProjectionSelectionWidget.setEnabled(True)
-                self.FieldEPSG_CBox.setEnabled(False)
-                self.loadactivelayer_btn.setEnabled(True)
+                self.cbox_field_epsg.setEnabled(False)
+                self.btn_loadactivelayer.setEnabled(True)
                 self.ckb_epsgfield.setEnabled(True)
                 self.sel_epsg()
         except:
             self.unexpected_error_message()
-    
+
     def check_directory(self):
-        try: 
-            if os.path.exists(self.destination_copy_dir.text()):
+        try:
+            if os.path.exists(self.line_edit_destination_copy_dir.text()):
                 self.btn_copy_lidar.setEnabled(True)
             else:
                 self.btn_copy_lidar.setEnabled(False)
         except:
             self.unexpected_error_message()
-        
+
     def sel_active_layer(self):
-        """Get active layer in TOC, if it is a polygon layer pass to tile index layer combo box and populate fields combo box
+        """Get active layer in TOC, if it is a polygon layer pass to tile index layer combo box
+        and populate fields combo box
         --------------------------"""
         try:
-            self.textdisplay.clear()
+            self.testedit_logdisplay.clear()
             if self.chk_help.isChecked():
-                self.textdisplay.setText('Help: ' + self.sel_active_layer.__doc__)
-            if self.ckb_setdefault.isChecked() == False:
+                self.testedit_logdisplay.setText('Help: ' + self.sel_active_layer.__doc__)
+            if not self.ckb_setdefault.isChecked():
                 try:
                     if self.iface.activeLayer():
-                        my_active_toc_layer=self.iface.activeLayer()
+                        my_active_toc_layer = self.iface.activeLayer()
                         my_name_toc_layer = my_active_toc_layer.name()
-                        
-                        # if active layer is a polygon layer set active layer in ComboBox, else get first one polygon layer 
-                        if (my_active_toc_layer.type() == QgsMapLayer.VectorLayer):
-                            if (my_active_toc_layer.geometryType() == 2):
+
+                        # if active layer is a polygon layer set active layer in ComboBox,
+                        # else get first one polygon layer
+                        if my_active_toc_layer.type() == QgsMapLayer.VectorLayer:
+                            if my_active_toc_layer.geometryType() == 2:
                                 # get index in ComboBox by name layer 
-                                my_cb_index = self.LayerBox.findText(my_name_toc_layer)
+                                my_cb_index = self.til_box.findText(my_name_toc_layer)
                                 # set active layer in TOC in ComboBox 
-                                self.LayerBox.setCurrentIndex(my_cb_index)
-                                self.textdisplay.append('Get polygon layer ' + self.set_text_color(my_name_toc_layer, 2, 600) )                        
+                                self.til_box.setCurrentIndex(my_cb_index)
+                                self.testedit_logdisplay.append(
+                                    'Get polygon layer ' + self.set_text_color(my_name_toc_layer, 2, 600))
                             else:
-                                self.LayerBox.setCurrentIndex(0)
-                                self.textdisplay.append('Layer ' + self.set_text_color(my_name_toc_layer, 1, 600)  + ' is not a polygon layer. Get the first one in TOC' )                        
+                                self.til_box.setCurrentIndex(0)
+                                self.testedit_logdisplay.append('Layer ' + self.set_text_color(my_name_toc_layer, 1,
+                                                                                               600)
+                                                                + ' is not a polygon layer. Get the first one in TOC')
                         else:
-                            self.LayerBox.setCurrentIndex(0)
-                            self.textdisplay.append('Layer ' + self.set_text_color(my_name_toc_layer, 1, 600) + ' is not a vector polygon layer. Get the first one in TOC' )                        
+                            self.til_box.setCurrentIndex(0)
+                            self.testedit_logdisplay.append('Layer ' + self.set_text_color(my_name_toc_layer, 1,
+                                                                                           600)
+                                                            + ' is not a polygon layer. Get the first one in TOC')
                     else:
-                        self.textdisplay.append('No active Layer in TOC')
+                        self.testedit_logdisplay.append('No active Layer in TOC')
                 except:
-                    self.LayerBox.setCurrentIndex(0)
-                    self.textdisplay.append('Error getting layer from TOC')
+                    self.til_box.setCurrentIndex(0)
+                    self.testedit_logdisplay.append('Error getting layer from TOC')
         except:
             self.unexpected_error_message()
 
-    def field_select(self, event):
+    def field_select(self):
         """Populate field combo box from tile index layer
         --------------------------"""
         try:
-            if self.ckb_setdefault.isChecked() == False and self.get_user_input()[0] is not None:
-                self.FieldPath_CBox.clear()
-                self.FieldEPSG_CBox.clear()
+            if not self.ckb_setdefault.isChecked() and self.get_user_input()[0] is not None:
+                self.cbox_fieldpath.clear()
+                self.cbox_field_epsg.clear()
                 mylist_field1 = []
-                mylist_field2 = []
                 for field in self.get_user_input()[0].fields():
                     mylist_field1.append(field.name())
-                mylist_field2 =[field.name() for field in self.get_user_input()[0].fields()]
-                self.FieldPath_CBox.addItems(mylist_field1)
-                self.FieldEPSG_CBox.addItems(mylist_field2)
+                mylist_field2 = [field.name() for field in self.get_user_input()[0].fields()]
+                self.cbox_fieldpath.addItems(mylist_field1)
+                self.cbox_field_epsg.addItems(mylist_field2)
         except:
             self.unexpected_error_message()
-    
+
     def sel_epsg(self):
         """ check/uncheck selectBox if epsg input mode changed
         --------------------------"""
         try:
             if self.ckb_epsgfield.isChecked():
                 self.mQgsProjectionSelectionWidget.setEnabled(False)
-                self.FieldEPSG_CBox.setEnabled(True)
+                self.cbox_field_epsg.setEnabled(True)
             else:
                 self.mQgsProjectionSelectionWidget.setEnabled(True)
-                self.FieldEPSG_CBox.setEnabled(False)
+                self.cbox_field_epsg.setEnabled(False)
         except:
             self.unexpected_error_message()
-    
+
     def get_user_input(self):
         """ get list of user input """
         try:
             try:
-                vlayer = self.LayerBox.currentLayer()# get input Tile Index layer from LayerBox -Index 0
+                vlayer = self.til_box.currentLayer()  # get input Tile Index layer from til_box -Index 0
             except:
                 vlayer = None
             try:
-                my_path_fld = self.FieldPath_CBox.currentText()# get input field with path for LIDAR file - Index 1
+                my_path_fld = self.cbox_fieldpath.currentText()  # get input field with path for LIDAR file - Index 1
             except:
-                my_path_fld= None
-            my_zfactorset = self.ZfactorSpinBox.value() # get z factor value - Index 2
-            my_Azimut = self.AzimutSpinBox.value()# get azimut value - Index 3
-            my_Elevation = self. ElevationSpinBox.value()# get elevation value - Index 4
+                my_path_fld = None
+            my_zfactorset = self.spinbox_zfactor.value()  # get z factor value - Index 2
+            my_azimut = self.spinbox_azimut.value()  # get azimut value - Index 3
+            my_elevation = self.spinbox_elevation.value()  # get elevation value - Index 4
             my_crs = None
-            my_crs_field = None
 
             # get CRS (EPSG code) from cbox - Index 5
             try:
                 if self.ckb_epsgfield.isChecked():
-                    my_crs_field = self.FieldEPSG_CBox.currentText()
-                    return vlayer, my_path_fld, my_zfactorset, my_Azimut, my_Elevation, my_crs_field
+                    my_crs_field = self.cbox_field_epsg.currentText()
+                    return vlayer, my_path_fld, my_zfactorset, my_azimut, my_elevation, my_crs_field
                 else:
                     my_crs = self.mQgsProjectionSelectionWidget.crs()
-                    return vlayer, my_path_fld, my_zfactorset, my_Azimut, my_Elevation, my_crs
+                    return vlayer, my_path_fld, my_zfactorset, my_azimut, my_elevation, my_crs
             except:
                 pass
-                return vlayer, my_path_fld, my_zfactorset, my_Azimut, my_Elevation, my_crs
+                return vlayer, my_path_fld, my_zfactorset, my_azimut, my_elevation, my_crs
         except:
             self.unexpected_error_message()
 
-    def changeAzimutSpinBox(self):
+    def change_spinbox_azimut(self):
         try:
-            myDialValue= self.AzimutDial.value()
-            if (myDialValue >= 0 and myDialValue <= 180):
-                self.AzimutSpinBox.setValue(myDialValue+180)
+            my_dial_value = self.dial_azimut.value()
+            if 0 <= my_dial_value <= 180:
+                self.spinbox_azimut.setValue(my_dial_value + 180)
             else:
-                self.AzimutSpinBox.setValue(myDialValue-180)
+                self.spinbox_azimut.setValue(my_dial_value - 180)
         except:
             self.unexpected_error_message()
-    
-    def changeAzimutDial(self):
+
+    def change_dial_azimut(self):
         try:
-            mySpinBoxValue= self.AzimutSpinBox.value()
-            if (mySpinBoxValue >= 0 and mySpinBoxValue <= 180):
-                self.AzimutDial.setValue(mySpinBoxValue+180)
+            my_spinbox_value = self.spinbox_azimut.value()
+            if 0 <= my_spinbox_value <= 180:
+                self.dial_azimut.setValue(my_spinbox_value + 180)
             else:
-                self.AzimutDial.setValue(mySpinBoxValue-180)
+                self.dial_azimut.setValue(my_spinbox_value - 180)
         except:
             self.unexpected_error_message()
-    
-    def changeElevationSpinBox(self):
+
+    def change_spinbox_elevation(self):
         try:
-            mySliderValue= self.ElevationSlider.value()
-            self.ElevationSpinBox.setValue(mySliderValue)
+            my_slider_value = self.slider_elevation.value()
+            self.spinbox_elevation.setValue(my_slider_value)
         except:
             self.unexpected_error_message()
-            
-    def changeElevationSlider(self):
+
+    def change_slider_elevation(self):
         try:
-            myElevationSpinBoxValue= self.ElevationSpinBox.value()
-            self.ElevationSlider.setValue(myElevationSpinBoxValue)
+            my_spinbox_elevation_value = self.spinbox_elevation.value()
+            self.slider_elevation.setValue(my_spinbox_elevation_value)
         except:
             self.unexpected_error_message()
-    
+
     def browse_file(self):
         """ Open save layer dialog 
         --------------------------"""
         try:
-            self.textdisplay.clear()
+            self.testedit_logdisplay.clear()
             if self.chk_help.isChecked():
-                self.textdisplay.setText('Help: ' + self.browse_file.__doc__)
+                self.testedit_logdisplay.setText('Help: ' + self.browse_file.__doc__)
             settings = QgsSettings()
-            dirName = settings.value("/UI/lastShapefileDir")
+            dir_name = settings.value("/UI/lastShapefileDir")
             encode = settings.value("/UI/encoding")
-            # DirDialog = QtWidgets.QFileDialog.getExistingDirectory(self,"Choose Directory",dirName)
-            fileDialog = QgsEncodingFileDialog(self, "Output virtual file", dirName,
-                                               "Virtual file (*.vrt)", encode)
-            fileDialog.setDefaultSuffix("vrt")
-            fileDialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-            fileDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
-            if not fileDialog.exec_() == QtWidgets.QDialog.Accepted:
+            # DirDialog = QtWidgets.Qfile_dialog.getExistingDirectory(self,"Choose Directory",dir_name)
+            file_dialog = QgsEncodingFileDialog(self, "Output virtual file", dir_name,
+                                                "Virtual file (*.vrt)", encode)
+            file_dialog.setDefaultSuffix("vrt")
+            file_dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+            file_dialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+            if not file_dialog.exec_() == QtWidgets.QDialog.Accepted:
                 return
-            files = fileDialog.selectedFiles()
+            files = file_dialog.selectedFiles()
             self.VirtualFileEdit.setText(files[0])
-            self.encoding = fileDialog.encoding()
+            self.encoding = file_dialog.encoding()
         except:
             self.unexpected_error_message()
-    
+
     def browse_dir(self, dir_type):
         """Select directory to copy the lidar file(s) selected in tile index layer
         --------------------------"""
-        my_dir = ''
+        my_dir_title = ''
         if dir_type == 'copy_lidar':
-            my_dir_tile = 'Choose Directory to Copy LIDAR'
+            my_dir_title = 'Choose Directory to Copy LIDAR'
             if self.chk_help.isChecked():
-                self.textdisplay.clear()
-                self.textdisplay.setText('Help: ' + self.browse_dir.__doc__)
+                self.testedit_logdisplay.clear()
+                self.testedit_logdisplay.setText('Help: ' + self.browse_dir.__doc__)
         elif dir_type == 'til_dir':
-            my_dir_tile = 'Choose Directory source to create Tile Index Layer'
+            my_dir_title = 'Choose Directory source to create Tile Index Layer'
             if self.chk_help.isChecked():
-                self.textdisplay.clear()
-                self.textdisplay.setText('Help: Create Tile Index Layer from lidar files in a directory (read also subdirectory)\n  --------------------------')
+                self.testedit_logdisplay.clear()
+                self.testedit_logdisplay.setText(
+                    'Help: Create Tile Index Layer from lidar files in a directory (read also subdirectory)\n  '
+                    '--------------------------')
         settings = QgsSettings()
-        dirName = settings.value("/UI/lastShapefileDir")
-        my_dir = QtWidgets.QFileDialog.getExistingDirectory(self, my_dir_tile, dirName, QtWidgets.QFileDialog.ShowDirsOnly)
-        my_ok_dir = str(pathlib.PurePath(my_dir))# to get raw filesystem path. Warning if empty returm '.'
-        print ('my_dir:',my_dir)
+        dir_name = settings.value("/UI/lastShapefileDir")
+        my_dir = QtWidgets.QFileDialog.getExistingDirectory(self, my_dir_title, dir_name,
+                                                            QtWidgets.QFileDialog.ShowDirsOnly)
+        my_ok_dir = str(pathlib.PurePath(my_dir))  # to get raw filesystem path. Warning if empty returm '.'
+        print('my_dir:', my_dir)
         if not my_ok_dir == '.':
             if dir_type == 'copy_lidar':
-                self.destination_copy_dir.setText(my_ok_dir)
-                print ('my_ok_dir_1:',my_ok_dir) 
+                self.line_edit_destination_copy_dir.setText(my_ok_dir)
+                print('my_ok_dir_1:', my_ok_dir)
             elif dir_type == 'til_dir':
-                print ('my_ok_dir_2:',my_ok_dir) 
+                print('my_ok_dir_2:', my_ok_dir)
                 return my_ok_dir
         else:
-            print ('my_ok_dir_3:',my_ok_dir) 
-            self.destination_copy_dir.setText('')
+            print('my_ok_dir_3:', my_ok_dir)
+            self.line_edit_destination_copy_dir.setText('')
 
     def apply_az_elev_zfactor(self):
         """Apply azimut, elevation and z factor user input value to selected file/vrt lidar(s) 
@@ -340,33 +346,36 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             my_err_layers = 0
             my_ok_layers = 0
             mylayers = self.iface.layerTreeView().selectedLayersRecursive()
-            self.textdisplay.clear()
+            self.testedit_logdisplay.clear()
             if self.chk_help.isChecked():
-                self.textdisplay.append('Help: ' + self.apply_az_elev_zfactor.__doc__)
+                self.testedit_logdisplay.append('Help: ' + self.apply_az_elev_zfactor.__doc__)
             mylayers_count = len(mylayers)
-            my_zfactorset = self.ZfactorSpinBox.value() 
-            my_azimut = self.AzimutSpinBox.value()
-            my_elevation = self.ElevationSpinBox.value()
+            my_zfactorset = self.spinbox_zfactor.value()
+            my_azimut = self.spinbox_azimut.value()
+            my_elevation = self.spinbox_elevation.value()
 
             for my_raster in mylayers:
                 if type(my_raster) is QgsRasterLayer:
                     r = QgsHillshadeRenderer(my_raster.dataProvider(), 1, my_azimut, my_elevation)
                     r.setZFactor(my_zfactorset)
                     my_raster.setRenderer(r)
-                    my_ok_layers = my_ok_layers +1
-                    self.progress_bar.setValue(1+int(my_ok_layers/mylayers_count*100))
-                    # self.textdisplay.append("Processing n. " + str(my_ok_layers) + " raster layer (s) of " + str(mylayers_count))
+                    my_ok_layers = my_ok_layers + 1
+                    self.progress_bar.setValue(1 + int(my_ok_layers / mylayers_count * 100))
+                    # self.testedit_logdisplay.append("Processing n. " + str(my_ok_layers)
+                    # + " raster layer (s) of " + str(mylayers_count))
                 else:
-                    my_err_layers = my_err_layers+1
+                    my_err_layers = my_err_layers + 1
 
             time.sleep(0.2)
             self.progress_bar.setValue(100)
             self.iface.mapCanvas().refreshAllLayers()
-            if my_err_layers >0:
-                self.textdisplay.append("N. " + str(my_ok_layers) + " of " + str(mylayers_count) +" layer(s) processing. Selection counts n." + str(my_err_layers)
-                + " no grid o raster layers")
+            if my_err_layers > 0:
+                self.testedit_logdisplay.append("N. " + str(my_ok_layers) + " of " + str(
+                    mylayers_count) + " layer(s) processing. Selection counts n." + str(my_err_layers)
+                                                + " no grid o raster layers")
             else:
-                self.textdisplay.append("Done. N. " + str(my_ok_layers) + " of " + str(mylayers_count) +" layer(s) processing.")
+                self.testedit_logdisplay.append(
+                    "Done. N. " + str(my_ok_layers) + " of " + str(mylayers_count) + " layer(s) processing.")
             time.sleep(0.2)
             self.progress_bar.setValue(0)
         except:
@@ -374,106 +383,113 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
 
     # function to test connect
     def def_test(self):
-        QtWidgets.QMessageBox.warning(self, "Lidar_manager","funziona")
-        
+        QtWidgets.QMessageBox.warning(self, "Lidar_manager", "funziona")
+
     def check_path(self):
         """Check field selected in combo box to verify and report valid path file for all record
         -------------------------"""
-        self.textdisplay.clear()
+        self.testedit_logdisplay.clear()
         if self.chk_help.isChecked():
-            self.textdisplay.append('Help: ' + self.check_path.__doc__)
+            self.testedit_logdisplay.append('Help: ' + self.check_path.__doc__)
         if self.get_user_input()[0]:
             my_field_list = self.get_user_input()[0].fields()
             my_field_index = my_field_list.indexFromName(self.get_user_input()[1])
             my_field_object = my_field_list[my_field_index]
             start_time = time.time()
-            count_true=0
-            count_raster=0
-            count_false=0
-            count_null=0
+            count_true = 0
+            count_false = 0
+            count_null = 0
             count_tot = self.get_user_input()[0].featureCount()
             if my_field_object.typeName() == 'String':
-                self.textdisplay.append('Check path file. Field: "' + self.get_user_input()[1]+'" - ' +my_field_object.typeName()+' - Valid type....')
+                self.testedit_logdisplay.append('Check path file. Field: "' + self.get_user_input()[
+                    1] + '" - ' + my_field_object.typeName() + ' - Valid type....')
                 for f in self.get_user_input()[0].getFeatures():
-                    count_prog = count_true+count_false+count_null
-                    self.progress_bar.setValue(1+int(count_prog/count_tot*100))
+                    count_prog = count_true + count_false + count_null
+                    self.progress_bar.setValue(1 + int(count_prog / count_tot * 100))
                     try:
                         if not (f[self.get_user_input()[1]]):
-                            count_null = count_null+1
+                            count_null = count_null + 1
                             pass
                         else:
                             if os.path.isfile(f[self.get_user_input()[1]]):
-                                count_true=count_true+1
+                                count_true = count_true + 1
                             else:
-                                count_false=count_false+1
+                                count_false = count_false + 1
                     except:
-                        count_false=count_false+1
-                tot_time = round ((time.time() - start_time),2)
-                self.textdisplay.append('Record with valid file path:' + self.set_text_color(str(count_true), 2, 600)) 
-                self.textdisplay.append('Record with invalid file path:' + self.set_text_color(str(count_false), 1, 600))
-                self.textdisplay.append('Record with null value:' + self.set_text_color(str(count_null), 1, 600))
+                        count_false = count_false + 1
+                tot_time = round((time.time() - start_time), 2)
+                self.testedit_logdisplay.append('Record with valid file path:'
+                                                + self.set_text_color(str(count_true), 2, 600))
+                self.testedit_logdisplay.append(
+                    'Record with invalid file path:' + self.set_text_color(str(count_false), 1, 600))
+                self.testedit_logdisplay.append('Record with null value:'
+                                                + self.set_text_color(str(count_null), 1, 600))
                 self.progress_bar.setValue(0)
                 return count_true, count_false, count_null, tot_time
             else:
-                self.textdisplay.append('Check path file. Field: "' + self.get_user_input()[1]+ '" - ' +my_field_object.typeName()+' - Invalid type')
+                self.testedit_logdisplay.append('Check path file. Field: "' + self.get_user_input()[
+                    1] + '" - ' + my_field_object.typeName() + ' - Invalid type')
         else:
-            self.textdisplay.append('No field selected')
+            self.testedit_logdisplay.append('No field selected')
 
     def copy_lidar_from_layer(self):
         """Copy lidar file(s) from selected tile(s) in tile index layer to destination directory
         --------------------------"""
         # manage log information
-        self.textdisplay.clear()
+        self.testedit_logdisplay.clear()
         if self.chk_help.isChecked():
-            self.textdisplay.append('Help: ' + self.copy_lidar_from_layer.__doc__)
-        
+            self.testedit_logdisplay.append('Help: ' + self.copy_lidar_from_layer.__doc__)
+
         # start of time measurement
         start_time = time.time()
-        self.textdisplay.append("Start to copy file")
-        
-        my_destdir = self.destination_copy_dir.text()
-        
+        self.testedit_logdisplay.append("Start to copy file")
+
+        my_destdir = self.line_edit_destination_copy_dir.text()
+
         # create a directory from input in widget, useful only by direct user input
         if len(my_destdir) > 0:
-            if os.path.exists(my_destdir)==False: 
+            if not os.path.exists(my_destdir):
                 os.mkdir(my_destdir)
 
         # get input user
-        my_selection=self.get_user_input()[0].selectedFeatures()# get selection from input layer
-        vprovider=self.get_user_input()[0].dataProvider()
-        
-        # count selection to manage output message
-        mytot_selection=len(my_selection) 
+        my_selection = self.get_user_input()[0].selectedFeatures()  # get selection from input layer
+        # vprovider = self.get_user_input()[0].dataProvider() - DELETE?
+
         # counter to check file existing
-        my_file_exist=0
-        my_file_nonexist=0
-        my_tot_file=my_file_exist+my_file_nonexist
-        
+        my_file_exist = 0
+        my_file_nonexist = 0
+        my_tot_file = my_file_exist + my_file_nonexist
+
         if len(my_selection) == 0:
-            self.textdisplay.append ('Non feature selected in layer '+ self.get_user_input()[0].name())
+            self.testedit_logdisplay.append('Non feature selected in layer ' + self.get_user_input()[0].name())
         else:
             for feature in my_selection:
-                my_tot_file=my_tot_file+1
+                my_tot_file = my_tot_file + 1
                 if os.path.exists(feature[self.get_user_input()[1]]):
                     try:
-                        shutil.copyfile(feature[self.get_user_input()[1]],my_destdir+'/'+os.path.basename(feature[self.get_user_input()[1]]))
-                        self.progress_bar.setValue(1+int(my_tot_file/len(my_selection)*100))
-                        self.textdisplay.append ('copied file n. '+ str(my_file_exist+1)+' of ' + str(len(my_selection)))
-                        my_file_exist = my_file_exist+1
+                        shutil.copyfile(feature[self.get_user_input()[1]],
+                                        my_destdir + '/' + os.path.basename(feature[self.get_user_input()[1]]))
+                        self.progress_bar.setValue(1 + int(my_tot_file / len(my_selection) * 100))
+                        self.testedit_logdisplay.append(
+                            'copied file n. ' + str(my_file_exist + 1) + ' of ' + str(len(my_selection)))
+                        my_file_exist = my_file_exist + 1
                     except:
-                        self.textdisplay.append('Error in copying file')
+                        self.testedit_logdisplay.append('Error in copying file')
                 else:
                     # self.progress_bar.setValue(1+int(my_tot_file/len(my_selection)*100))
-                    # self.textdisplay.append ('file '+ feature[self.get_user_input()[1]]+ ' non trovato')
-                    my_file_nonexist = my_file_nonexist+1
+                    # self.testedit_logdisplay.append ('file '+ feature[self.get_user_input()[1]]+ ' non trovato')
+                    my_file_nonexist = my_file_nonexist + 1
             if len(my_selection) == my_file_nonexist:
-                self.textdisplay.append ('Invalid file in input field of layer ' + self.get_user_input()[0].name())
-            self.textdisplay.append ('File selected: ' +str(len(my_selection)))
-            self.textdisplay.append ('File copied: '+ self.set_text_color(str(my_file_exist), 2, 600) +' in '+self.set_text_color(my_destdir, 2, 600))
-            self.textdisplay.append ('File not find: '+self.set_text_color(str(my_file_nonexist), 1, 600))
-            self.textdisplay.append ('Time process: ' + str(round ((time.time() - start_time),2)) + ' second(s)')
+                self.testedit_logdisplay.append('Invalid file in input field of layer '
+                                                + self.get_user_input()[0].name())
+            self.testedit_logdisplay.append('File selected: ' + str(len(my_selection)))
+            self.testedit_logdisplay.append(
+                'File copied: ' + self.set_text_color(str(my_file_exist), 2, 600) + ' in ' + self.set_text_color(
+                    my_destdir, 2, 600))
+            self.testedit_logdisplay.append('File not find: ' + self.set_text_color(str(my_file_nonexist), 1, 600))
+            self.testedit_logdisplay.append('Time process: ' + str(round((time.time() - start_time), 2)) + ' second(s)')
             self.progress_bar.setValue(100)
-            self.textdisplay.append("Done")
+            self.testedit_logdisplay.append("Done")
             time.sleep(0.5)
             self.progress_bar.setValue(0)
 
@@ -481,100 +497,58 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         """Clean all message log
         --------------------------"""
         # manage log information
-        self.textdisplay.clear()
+        self.testedit_logdisplay.clear()
         if self.chk_help.isChecked():
-            self.textdisplay.append('Help: ' + self.clear_log.__doc__)
-            
-    def set_text_color(self, mytext, mycolor, mybold, myitalic = 'normal'):
+            self.testedit_logdisplay.append('Help: ' + self.clear_log.__doc__)
+
+    @staticmethod
+    def set_text_color(mytext, mycolor, mybold, myitalic='normal'):
         """Set html code to color string in QTextEdit
         --------------------------"""
         # input index match color
         my_color_list = ["#000000", "#ff0000", "#008000"]
-        
-        outputText = "<span style=\" font-size:8pt; font-weight:"
+
+        output_text = "<span style=\" font-size:8pt; font-weight:"
         # input mybold integer (600) match bold/no bold 
-        outputText += str(mybold)
-        outputText += "; font-style:"
-        outputText += myitalic
-        outputText += "; color:"
-        outputText += my_color_list[mycolor]
-        outputText += ";\" >"
-        outputText += mytext
-        outputText += "</span>"
-        return outputText
-    
-    def default_value_hlsd (self):
-        """Set artificial NW middle latitudine sun position as default value to azimut, elevation and z factor for hillshading
+        output_text += str(mybold)
+        output_text += "; font-style:"
+        output_text += myitalic
+        output_text += "; color:"
+        output_text += my_color_list[mycolor]
+        output_text += ";\" >"
+        output_text += mytext
+        output_text += "</span>"
+        return output_text
+
+    def default_value_hlsd(self):
+        """Set artificial NW middle latitudine sun position as default value to azimut,
+        elevation and z factor for hillshading
         --------------------------"""
         try:
-            self.textdisplay.clear()
+            self.testedit_logdisplay.clear()
             if self.chk_help.isChecked():
-                self.textdisplay.append('Help: ' + self.default_value_hlsd.__doc__)
-            self.AzimutSpinBox.setValue(315)
-            self.ElevationSpinBox.setValue(45)
-            self.ZfactorSpinBox.setValue(1)
+                self.testedit_logdisplay.append('Help: ' + self.default_value_hlsd.__doc__)
+            self.spinbox_azimut.setValue(315)
+            self.spinbox_elevation.setValue(45)
+            self.spinbox_zfactor.setValue(1)
         except:
             self.unexpected_error_message()
-        
-    def create_vrt_from_til (self, mylist):
-        try:
-            self.textdisplay.append('Creating Virtual Raster (VRT) file, wait... \n')
-            #create vrt path file name 
-            my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
-            my_vrt = 'Vrt_'+my_date_time_str+'.vrt'
-            vrt_path = os.path.join(MY_DEFAULT_DESTDIR, my_vrt)
-            #built vrt file and return callback to show progress
-            if mylist:
-                my_vrt_built = gdal.BuildVRT(vrt_path, mylist, callback=self.progress_callback)
-                self.textdisplay.append('VRT created, add to project and set EPSG....\n')
-                my_vrt_built = None
-                my_new_vrt = self.iface.addRasterLayer(vrt_path, my_vrt)
-                self.progress_bar.setTextVisible(True)
-                self.progress_bar.setValue(85)
-                time.sleep(0.5)
-                # manage raster projection by input user
-                if self.ckb_epsgfield.isChecked():
-                    self.textdisplay.append("To create VRT you have to use a unique EPSG source code, field option is not allowed")
-                    self.textdisplay.append(("EPSG not set \n"))
-                else:
-                    try:
-                        if self.get_user_input()[5].isValid():
-                            my_new_vrt.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
-                        else: 
-                            self.textdisplay.append("Invalid EPSG input. EPSG code not set")
-                    except:
-                        self.textdisplay.append("Error reading EPSG input. EPSG code not set")
-                
-                self.progress_bar.setValue(90)
-                time.sleep(0.5)
-                vrt_r = QgsHillshadeRenderer (my_new_vrt.dataProvider(), 1, self.get_user_input()[3], self.get_user_input()[4])
-                vrt_r.setZFactor (self.get_user_input()[2])
-                my_new_vrt.setRenderer(vrt_r)
-                self.progress_bar.setValue(100)
-                time.sleep(0.5)
-                self.textdisplay.append("VRT file creted in default user folder: ")
-                self.textdisplay.append(self.set_text_color(vrt_path, 2, 600))
-                self.textdisplay.append('')
-                self.progress_bar.setValue(0)
-        except:
-            self.unexpected_error_message()
-    
+
     def open_user_folder(self):
         """Open user folder directory in default OS file manager
         --------------------------"""
         print(MY_DEFAULT_DESTDIR)
         try:
-            self.textdisplay.clear()
+            self.testedit_logdisplay.clear()
             if self.chk_help.isChecked():
-                self.textdisplay.setText('Help: ' + self.open_user_folder.__doc__)
+                self.testedit_logdisplay.setText('Help: ' + self.open_user_folder.__doc__)
             try:
                 os.startfile(MY_DEFAULT_DESTDIR)
             except:
-                self.textdisplay.append(MY_DEFAULT_DESTDIR + ' not exist')
+                self.testedit_logdisplay.append(MY_DEFAULT_DESTDIR + ' not exist')
         except:
             self.unexpected_error_message()
-            
-    
+
     def progress_callback(self, complete, message, unknown):
         try:
             self.progress_bar.setTextVisible(False)
@@ -592,20 +566,18 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             time.sleep(0.2)
         except:
             self.unexpected_error_message()
-    
-      
+
     def create_vrt_from_toc(self):
         """Create virtual raster file from lidar active in TOC
         --------------------------"""
         try:
-            self.textdisplay.clear()
+            self.testedit_logdisplay.clear()
             if self.chk_help.isChecked():
-                self.textdisplay.append('Help: ' + self.create_vrt_from_toc.__doc__)
-            # start of time measurement
-            start_time = time.time()
+                self.testedit_logdisplay.append('Help: ' + self.create_vrt_from_toc.__doc__)
+
             # get list of raster active in TOC
             my_raster_toc = self.iface.layerTreeView().selectedLayersRecursive()
-           # counter for raster file
+            # counter for raster file
             my_raster_count_none = 0
             my_raster_count_ok = 0
             my_dtm_list_vrt = []
@@ -614,162 +586,136 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
             for rst in my_raster_toc:
                 if rst.type() == QgsMapLayerType.RasterLayer:
                     my_dtm_list_vrt.append(rst.publicSource())
-                    my_raster_count_ok = my_raster_count_ok +1
+                    my_raster_count_ok = my_raster_count_ok + 1
                 else:
-                    my_raster_count_none = my_raster_count_none+1
-            
+                    my_raster_count_none = my_raster_count_none + 1
+
             if len(my_dtm_list_vrt) == 0:
-                self.textdisplay.append(self.set_text_color ('\n No raster layer (s) active in TOC', 1, 600))
+                self.testedit_logdisplay.append(self.set_text_color('\n No raster layer (s) active in TOC', 1, 600))
             else:
                 self.create_vrt_from_til(my_dtm_list_vrt)
-            
+
             if my_raster_count_none > 0:
-                self.textdisplay.append("Select in TOC n." + str(len(my_raster_toc)) + ' layer(s)'
-                + ". Processed n. " + str(my_raster_count_ok) + " raster layer(s)"
-                + ". Skip n. " + str(my_raster_count_none)+ " no raster layer(s) \n")
+                self.testedit_logdisplay.append("Select in TOC n." + str(len(my_raster_toc)) + ' layer(s)'
+                                                + ". Processed n. " + str(my_raster_count_ok) + " raster layer(s)"
+                                                + ". Skip n. " + str(my_raster_count_none) + " no raster layer(s) \n")
         except:
             self.unexpected_error_message()
-        
-    def load_lidar_from_til_start(self, file_vs_vrt):
+
+    def load_lidar_from_til_start(self):
         """Load Lidar from feature selection in tile index layer and apply hillshading setting.
         ------------------------- """
         try:
-            my_selection=self.get_user_input()[0].selectedFeatures()# get selection from input layer
-            mytot_selection=len(my_selection) # count selection to manage output message
+            my_selection = self.get_user_input()[0].selectedFeatures()  # get selection from input layer
+            mytot_selection = len(my_selection)  # count selection to manage output message
             if mytot_selection == 0:
-                self.textdisplay.append("No feature selection in Layer: " + self.get_user_input()[0].name()+ ' - exit \n')
+                self.testedit_logdisplay.append(
+                    "No feature selection in Layer: " + self.get_user_input()[0].name() + ' - exit \n')
             else:
                 if mytot_selection > 12:
-                    self.textdisplay.append(str(mytot_selection) + ' tile features selected. Process may take long time \n')
+                    self.testedit_logdisplay.append(
+                        str(mytot_selection) + ' tile features selected. Process may take long time \n')
             return my_selection
         except:
             self.unexpected_error_message()
-    
+
     def load_lidar_from_til_core_file(self):
         """Load Lidar as file from feature selection in tile index layer and apply hillshading setting.
         ------------------------- """
         try:
-            self.textdisplay.clear()
+            self.testedit_logdisplay.clear()
             if self.chk_help.isChecked():
-                self.textdisplay.setText('Help: ' + self.load_lidar_from_til_core_file.__doc__)
-            
-            my_dtm_list_vrt = []
+                self.testedit_logdisplay.setText('Help: ' + self.load_lidar_from_til_core_file.__doc__)
+
             error_flag = 0
             my_count = 0
             my_count_none = 0
 
-            my_selection=self.load_lidar_from_til_start('file')# get selection from input layer
+            my_selection = self.load_lidar_from_til_start()  # get selection from input layer
             if my_selection:
-                mytot_selection=len(my_selection) # count selection to manage output message
+                mytot_selection = len(my_selection)  # count selection to manage output message
                 # add single file lidar from path field in features selection
-                self.textdisplay.append("Load LIDAR file(s)\n")
+                self.testedit_logdisplay.append("Load LIDAR file(s)\n")
 
                 for feature in my_selection:
-                    my_count=my_count+1
-                    #check if file exist and is a QgsRasterLayer (return None if is invalid)
+                    my_count = my_count + 1
+                    # check if file exist and is a QgsRasterLayer (return None if is invalid)
                     try:
-                        rlyr=QgsRasterLayer(feature[self.get_user_input()[1]], os.path.basename(feature[self.get_user_input()[1]]))
+                        rlyr = QgsRasterLayer(feature[self.get_user_input()[1]],
+                                              os.path.basename(feature[self.get_user_input()[1]]))
                     except:
-                        rlyr=QgsRasterLayer('invalid_path', 'invalid_raster') #when error occur from selected feature create an invalid raster type to pass next one and manage the invalid one
-                    
+                        rlyr = QgsRasterLayer('invalid_path',
+                                              'invalid_raster')  # when error occur from selected feature
+                        # create an invalid raster type to pass next
+                        # one and manage the invalid one
+
                     if not rlyr.isValid():
-                        my_count_none = my_count_none+1
+                        my_count_none = my_count_none + 1
                     else:
                         # add MapLayer to Project
                         mlyr = QgsProject.instance().addMapLayer(rlyr)
-                        # set progressbar and textdisplay when process is in progress
-                        self.textdisplay.append(self.set_text_color(mlyr.name(), 2, 600))
-                        self.textdisplay.append("add to project")
-                        self.progress_bar.setValue(1+int(my_count/mytot_selection*100))
-                        
+                        # set progressbar and testedit_logdisplay when process is in progress
+                        self.testedit_logdisplay.append(self.set_text_color(mlyr.name(), 2, 600))
+                        self.testedit_logdisplay.append("add to project")
+                        self.progress_bar.setValue(1 + int(my_count / mytot_selection * 100))
+
                         # manage raster projection by input user
                         try:
                             if self.ckb_epsgfield.isChecked():
-                                mlyr.setCrs(QgsCoordinateReferenceSystem(feature[self.get_user_input()[5]], QgsCoordinateReferenceSystem.EpsgCrsId))
+                                mlyr.setCrs(QgsCoordinateReferenceSystem(feature[self.get_user_input()[5]],
+                                                                         QgsCoordinateReferenceSystem.EpsgCrsId))
                             else:
                                 if self.get_user_input()[5].isValid():
                                     mlyr.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
-                                else: 
+                                else:
                                     pass
                                     error_flag = 1
                         except:
                             error_flag = 1
                             pass
-                        #set hillshading by input user
-                        r = QgsHillshadeRenderer (mlyr.dataProvider(), 1, self.get_user_input()[3], self.get_user_input()[4])
-                        r.setZFactor (self.get_user_input()[2])
+                        # set hillshading by input user
+                        r = QgsHillshadeRenderer(mlyr.dataProvider(), 1, self.get_user_input()[3],
+                                                 self.get_user_input()[4])
+                        r.setZFactor(self.get_user_input()[2])
                         mlyr.setRenderer(r)
                     # create vrt file from path field in Tile Index File
-                # set progressbar and textdisplay when all processes have done
+                # set progressbar and testedit_logdisplay when all processes have done
                 self.progress_bar.setValue(100)
-                if my_count_none>0:
+                if my_count_none > 0:
                     my_text = self.set_text_color(self.get_user_input()[1], 0, 600, 'italic')
-                    self.textdisplay.append('Path field "' + my_text +'" return no raster type for ' +str(my_count_none) 
-                    + ' record(s) of '+ str(len(my_selection))+ ' record(s) selected. \n')
+                    self.testedit_logdisplay.append(
+                        'Path field "' + my_text + '" return no raster type for ' + str(my_count_none)
+                        + ' record(s) of ' + str(len(my_selection)) + ' record(s) selected. \n')
                     if my_count_none == len(my_selection):
-                        self.textdisplay.append('Check type and attributes of selected field.')# display when all record are invalid
-                if error_flag == 1: # run only when find at least one valid raster
-                    self.textdisplay.append('\n EPSG not set or invalid') 
-                    
+                        self.testedit_logdisplay.append(
+                            'Check type and attributes of selected field.')  # display when all record are invalid
+                if error_flag == 1:  # run only when find at least one valid raster
+                    self.testedit_logdisplay.append('\n EPSG not set or invalid')
+
                 time.sleep(0.5)
                 self.progress_bar.setValue(0)
                 self.iface.setActiveLayer(self.get_user_input()[0])
         except:
             self.unexpected_error_message()
-            
+
     def unexpected_error_message(self):
-        self.textdisplay.append('Unexpected error. See stack traces: \n')
-        self.textdisplay.append(''.join(traceback.format_exc()))
-    
+        self.testedit_logdisplay.append('Unexpected error. See stack traces: \n')
+        self.testedit_logdisplay.append(''.join(traceback.format_exc()))
+
     def open_readme_md(self):
         """Open readme file in github plugin repository
         --------------------------"""
         try:
-            self.textdisplay.clear()
+            self.testedit_logdisplay.clear()
             if self.chk_help.isChecked():
-                self.textdisplay.setText('Help: ' + self.open_readme_md.__doc__)
+                self.testedit_logdisplay.setText('Help: ' + self.open_readme_md.__doc__)
             try:
                 webbrowser.open(MY_README_LINK)
-                self.textdisplay.append('For complete help contents read readme.md file in github repository:')
-                self.textdisplay.append(self.set_text_color(MY_README_LINK, 0, 600))
-                self.textdisplay.append('it is opening in default OS web broswer')
+                self.testedit_logdisplay.append('For complete help contents read readme.md file in github repository:')
+                self.testedit_logdisplay.append(self.set_text_color(MY_README_LINK, 0, 600))
+                self.testedit_logdisplay.append('it is opening in default OS web broswer')
             except:
-                self.textdisplay.append(MY_README_LINK + ' not exist')
-        except:
-            self.unexpected_error_message()
-    def get_dtm_path_from_dir(self):
-        try:
-            global my_vglobal_dtm_list_from_dir
-            my_vglobal_dtm_list_from_dir = []
-            my_raster_count_none = 0
-            my_raster_count_ok = 0
-            my_count_files = 0
-            my_list_path_dtm = []
-            my_til_dir=self.browse_dir('til_dir')
-            # to manage color text in QTextEdit
-            dirText =  self.set_text_color(my_til_dir, 2, 600)
-            self.textdisplay.append('Read file to get tile from: ' + dirText + ' wait...')
-            self.textdisplay.append('')
-            # count file in dir
-            for folderName, subFolders, fileNames in os.walk(my_til_dir):
-                for f in fileNames:
-                    my_count_files=my_count_files+1
-            # check if is valid path for QgsRasterLayer and populate list to use in gdal:tileindex
-            for folderName, subFolders, fileNames in os.walk(my_til_dir):
-                for f in fileNames:
-                    rlyr=QgsRasterLayer(os.path.join(folderName,f), f)
-                    if not rlyr.isValid():
-                        my_raster_count_none = my_raster_count_none+1 # useful to manage invalid raster file
-                        self.progress_bar.setValue((my_raster_count_none+my_raster_count_ok)/my_count_files*100)
-                    else:
-                        my_raster_count_ok=my_raster_count_ok+1
-                        self.progress_bar.setValue((my_raster_count_none+my_raster_count_ok)/my_count_files*100)
-                        my_list_path_dtm.append(os.path.join(folderName,f))
-            print (my_list_path_dtm)
-            if len (my_list_path_dtm)>15:
-                self.textdisplay.append("Read "+ str(len(my_list_path_dtm)) + " valid path in directory/subdirectory. Process may take long time...")
-                self.textdisplay.append('')
-            my_vglobal_dtm_list_from_dir=my_list_path_dtm
+                self.testedit_logdisplay.append(MY_README_LINK + ' not exist')
         except:
             self.unexpected_error_message()
 
@@ -777,161 +723,258 @@ class LidarManagerDialog(QtWidgets.QDialog,FORM_CLASS):
         """Load Lidar as Virtual Raster from feature selection in tile index layer and apply hillshading setting.
         ------------------------- """
         try:
-            self.textdisplay.clear()
+            global cmd_file_vrt
+            cmd_file_vrt = ''
+            self.testedit_logdisplay.clear()
             if self.chk_help.isChecked():
-                self.textdisplay.setText('Help: ' + self.load_lidar_from_til_core_vrt.__doc__)
-            
+                self.testedit_logdisplay.setText('Help: ' + self.load_lidar_from_til_core_vrt.__doc__)
+
             my_dtm_list_vrt = []
             error_flag = 0
             my_count = 0
             my_count_none = 0
 
-            my_selection=self.load_lidar_from_til_start('vrt')# get selection from input layer
-            #work only with no empty list
+            my_selection = self.load_lidar_from_til_start()  # get selection from input layer
+            # work only with no empty list
             if my_selection:
-                mytot_selection=len(my_selection) # count selection to manage output message
-            # add single file lidar from path field in features selection
+                # add single file lidar from path field in features selection
                 for feature in my_selection:
-                    my_count=my_count+1
-                    #check if file exist and is a QgsRasterLayer (return None if is invalid)
+                    my_count = my_count + 1
+                    # check if file exist and is a QgsRasterLayer (return None if is invalid)
                     try:
-                        rlyr=QgsRasterLayer(feature[self.get_user_input()[1]], os.path.basename(feature[self.get_user_input()[1]]))
+                        rlyr = QgsRasterLayer(feature[self.get_user_input()[1]],
+                                              os.path.basename(feature[self.get_user_input()[1]]))
                     except:
-                        rlyr=QgsRasterLayer('invalid_path', 'invalid_raster') #when error occur from selected feature create an invalid raster type to pass next one and manage the invalid one
-                    
+                        rlyr = QgsRasterLayer('invalid_path', 'invalid_raster')
+                        # when error occur from selected feature create an invalid raster
+                        # type to pass next one and manage the invalid one
+
                     if not rlyr.isValid():
-                        my_count_none = my_count_none+1
+                        my_count_none = my_count_none + 1
                     else:
                         my_dtm_list_vrt.append(feature[self.get_user_input()[1]])
-                self.create_vrt_from_til(my_dtm_list_vrt)
-                # set progressbar and textdisplay when all processes have done
+                # self.create_vrt_from_til(my_dtm_list_vrt)
+                self.file_batch_vrt(my_dtm_list_vrt)
+                self.osgeo4w_run(cmd_file_vrt)
+
+                # set progressbar and testedit_logdisplay when all processes have done
                 self.progress_bar.setValue(100)
-                if my_count_none>0:
+                if my_count_none > 0:
                     my_text = self.set_text_color(self.get_user_input()[1], 0, 600, 'italic')
-                    self.textdisplay.append('Path field "' + my_text +'" return no raster type for ' +str(my_count_none) 
-                    + ' record(s) of '+ str(len(my_selection))+ ' record(s) selected. \n')
+                    self.testedit_logdisplay.append(
+                        'Path field "' + my_text + '" return no raster type for ' + str(my_count_none)
+                        + ' record(s) of ' + str(len(my_selection)) + ' record(s) selected. \n')
                     if my_count_none == len(my_selection):
-                        self.textdisplay.append('Check type and attributes of selected field.')# display when all record are invalid
-                if error_flag == 1: # run only when find at least one valid raster
-                    self.textdisplay.append('\n EPSG not set or invalid') 
-                    
+                        self.testedit_logdisplay.append(
+                            'Check type and attributes of selected field.')  # display when all record are invalid
+                if error_flag == 1:  # run only when find at least one valid raster
+                    self.testedit_logdisplay.append('\n EPSG not set or invalid')
+
                 time.sleep(0.5)
                 self.progress_bar.setValue(0)
                 self.iface.setActiveLayer(self.get_user_input()[0])
+                del cmd_file_vrt
         except:
             self.unexpected_error_message()
-    
+
     def create_til(self):
         """Create a Tile Index Layer from directory source by gdaltindex function in OSGeo4W shell
         --------------------------"""
         try:
-            self.textdisplay.clear()
-            #get global variable for threading
-            global cmd_file
+            self.testedit_logdisplay.clear()
+            # get global variable for threading
+            global cmd_file_til
             global til_path
-            cmd_file = ''
+            cmd_file_til = ''
             til_path = ''
-            
+
             start_time = time.time()
-            
+
             # manage creation of batch file and running in OSgeo4W by threading
-            
-            t1 = threading.Thread(target=self.file_batch_til()) # get global variable  til_path, cmd_file 
-            t2 = threading.Thread(target=self.osgeo4w_run(cmd_file))
+
+            t1 = threading.Thread(target=self.file_batch_til())  # get global variable  til_path, cmd_file_til
+            t2 = threading.Thread(target=self.osgeo4w_run(cmd_file_til))
             t1.start()
             t2.start()
-            t1.join()            
-            t2.join()            
-            
-            my_til_layer=QgsVectorLayer(til_path, os.path.basename(til_path))
-            
-            if (til_path != '') and (my_til_layer):
+            t1.join()
+            t2.join()
+
+            my_til_layer = QgsVectorLayer(til_path, os.path.basename(til_path))
+
+            if (til_path != '') and my_til_layer:
                 QgsProject.instance().addMapLayer(my_til_layer)
                 my_file_path_text = self.set_text_color(til_path, 2, 600)
                 warning_text = self.set_text_color("Warning: no fetaures in TIL, check source directory", 1, 600)
-                self.textdisplay.append("Tile Index Layer created and loaded in project. Source in default user folder: " + my_file_path_text)
-                self.textdisplay.append('')
+                self.testedit_logdisplay.append(
+                    "Tile Index Layer created and loaded in project. Source in default user folder: "
+                    + my_file_path_text)
+                self.testedit_logdisplay.append('')
                 if my_til_layer.featureCount() == 0:
-                    self.textdisplay.append(warning_text)
-                    self.textdisplay.append('')
-                self.textdisplay.append ('Time process: ' + str(round ((time.time() - start_time),2)) + ' second(s)')
-                self.textdisplay.append('')
+                    self.testedit_logdisplay.append(warning_text)
+                    self.testedit_logdisplay.append('')
+                self.testedit_logdisplay.append(
+                    'Time process: ' + str(round((time.time() - start_time), 2)) + ' second(s)')
+                self.testedit_logdisplay.append('')
             else:
-                self.textdisplay.append('Process aborted')
-            
-            #delete global variable
-            del cmd_file
+                self.testedit_logdisplay.append('Process aborted')
+
+            # delete global variable
+            del cmd_file_til
             del til_path
-            
+
             self.progress_bar.setValue(100)
             time.sleep(0.5)
             self.progress_bar.setValue(0)
 
         except:
             self.unexpected_error_message()
-            
-    def osgeo4w_run(self,my_cmd_file):
-        """run batch file created with file_batch_til() from OSGeo4W shell to crete TIL        
+
+    @staticmethod
+    def osgeo4w_run(my_cmd_file):
+        """run batch file created with file_batch_til() from OSGeo4W shell to crete TIL
         --------------------------"""
-        if (my_cmd_file):
+        if my_cmd_file:
             my_call = [CMD_OSGEO4W, my_cmd_file]
             subprocess.run(my_call)
-            os.remove(my_cmd_file)
-        
+            # os.remove(my_cmd_file)
+
     def file_batch_til(self):
-        global cmd_file
+        global cmd_file_til
         global til_path
-        cmd_file = ''
+        cmd_file_til = ''
         til_path = ''
         my_string_code_batch = ''
-        
-        my_til_dir=self.browse_dir('til_dir')
+
+        my_til_dir = self.browse_dir('til_dir')
         print('my_til_dir :', my_til_dir)
-        if (my_til_dir):
-            if (os.path.exists(my_til_dir)):
-                self.textdisplay.append('Scan directory ' + my_til_dir + ' to create Tile Index Layer \n')
+        if my_til_dir:
+            if os.path.exists(my_til_dir):
+                self.testedit_logdisplay.append('Scan directory ' + my_til_dir + ' to create Tile Index Layer \n')
                 self.progress_bar.setValue(0)
-                    # use specific name and location to manage name output
+                # use specific name and location to manage name output
                 my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
-                my_til = 'TIL_'+my_date_time_str+'.gpkg'
+                my_til = 'TIL_' + my_date_time_str + '.gpkg'
                 til_path = os.path.join(MY_DEFAULT_DESTDIR, my_til)
-                
-                #walk in subdirectory and write batch for all file extension
+
+                # walk in subdirectory and write batch for all file extension
                 for folderName, subFolders, fileNames in os.walk(my_til_dir):
                     for sf in subFolders:
-                        my_string_code_batch += 'gdaltindex -t_srs ' + str((self.get_user_input()[5]).authid()) + ' ' + til_path + ' "' + os.path.join(folderName, sf,'*.*') + '" \n'
+                        my_string_code_batch += 'gdaltindex -t_srs ' + str(
+                            (self.get_user_input()[5]).authid()) + ' ' + til_path + ' "' + os.path.join(folderName, sf,
+                                                                                                        '*.*') + '" \n'
                 # walk in root directory
-                my_string_code_batch += 'gdaltindex -t_srs ' + str((self.get_user_input()[5]).authid()) + ' ' + til_path + ' "' + os.path.join(my_til_dir, '*.*') + '" \n'
-                
-                cmd_file = os.path.join(MY_DEFAULT_DESTDIR, 'temp_'+my_date_time_str+'.bat')
-                f = open(os.path.join(cmd_file), 'w')
+                my_string_code_batch += 'gdaltindex -t_srs ' + str(
+                    (self.get_user_input()[5]).authid()) + ' ' + til_path + ' "' + os.path.join(my_til_dir,
+                                                                                                '*.*') + '" \n'
+
+                cmd_file_til = os.path.join(MY_DEFAULT_DESTDIR, 'temp_' + my_date_time_str + '.bat')
+                f = open(os.path.join(cmd_file_til), 'w')
                 f.write(my_string_code_batch)
                 f.close()
-                
-                self.textdisplay.append ('Run batch file from OSGeo4w shell \n')
-        
+
+                self.testedit_logdisplay.append('Run batch file from OSGeo4w shell \n')
 
     def file_batch_vrt(self, my_list):
-        global cmd_file
-        global vrt_path
-        cmd_file = ''
-        vrt_path = ''
-        my_string_code_batch = ''
-        
-        if (my_list):
+        global cmd_file_vrt
+        global batch_vrt_path
+        global list_file_vrt
+        cmd_file_vrt = ''
+        batch_vrt_path = ''
+        list_file_vrt = ''
+        my_string_list = ''
+
+        if my_list:
             self.progress_bar.setValue(0)
-                # use specific name and location to manage name output
+            # use specific name and location to manage name output
             my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
-            my_vrt = 'vrt_'+my_date_time_str+'.vrt'
-            vrt_path = os.path.join(MY_DEFAULT_DESTDIR, my_vrt)
-            
-            #get string path fil eform list
+            my_vrt = 'vrt_' + my_date_time_str + '.vrt'
+            batch_vrt_path = os.path.join(MY_DEFAULT_DESTDIR, my_vrt)
+
             for a in my_list:
-                my_string_code_batch += 'gdalbuildvrt ' + til_path + ' "' + a + '" \n'
-            
-            cmd_file = os.path.join(MY_DEFAULT_DESTDIR, 'temp_'+my_date_time_str+'.bat')
-            f = open(os.path.join(cmd_file), 'w')
+                my_string_list += a + ' \n'
+
+            list_file_vrt = os.path.join(MY_DEFAULT_DESTDIR, 'list_temp_' + my_date_time_str + '.txt')
+            fl = open(os.path.join(list_file_vrt), 'w')
+            fl.write(my_string_list)
+            fl.close()
+            # get string path file form list
+            my_string_code_batch = 'gdalbuildvrt ' + '-input_file_list ' + list_file_vrt + ' ' + batch_vrt_path
+
+            cmd_file_vrt = os.path.join(MY_DEFAULT_DESTDIR, 'temp_' + my_date_time_str + '.bat')
+            f = open(os.path.join(cmd_file_vrt), 'w')
             f.write(my_string_code_batch)
             f.close()
-            
-            self.textdisplay.append ('Run batch file from OSGeo4w shell \n')
+
+            self.testedit_logdisplay.append('Run batch file from OSGeo4w shell \n')
+
+    def create_vrt(self):
+        """Create a Virtual Raster File by gdalbuildvrt function in OSGeo4W shell
+        --------------------------"""
+        try:
+            self.testedit_logdisplay.clear()
+            if self.chk_help.isChecked():
+                self.testedit_logdisplay.setText('Help: ' + self.create_vrt.__doc__)
+            # get global variable for threading
+            global cmd_file_vrt
+            global batch_vrt_path
+            cmd_file_vrt = ''
+            batch_vrt_path = ''
+            my_dtm_list_vrt = []
+            error_flag = 0
+            my_count = 0
+            my_count_none = 0
+            start_time = time.time()
+            my_selection = self.load_lidar_from_til_start()  # get selection from input layer
+            # work only with no empty list
+            if my_selection:
+                # add single file lidar from path field in features selection
+                for feature in my_selection:
+                    my_count = my_count + 1
+                    # check if file exist and is a QgsRasterLayer (return None if is invalid)
+                    try:
+                        rlyr = QgsRasterLayer(feature[self.get_user_input()[1]],
+                                              os.path.basename(feature[self.get_user_input()[1]]))
+                    except:
+                        rlyr = QgsRasterLayer('invalid_path', 'invalid_raster')
+                        # when error occur from selected feature create an invalid raster
+                        # type to pass next one and manage the invalid one
+
+                    if not rlyr.isValid():
+                        my_count_none = my_count_none + 1
+                    else:
+                        my_dtm_list_vrt.append(feature[self.get_user_input()[1]])
+            # manage creation of batch file and running in OSgeo4W by threading
+
+                t1 = threading.Thread(target=self.file_batch_vrt(my_dtm_list_vrt))  # get global variable  til_path, cmd_file_til
+                t2 = threading.Thread(target=self.osgeo4w_run(cmd_file_vrt))
+                t1.start()
+                t2.start()
+                t1.join()
+                t2.join()
+
+            my_vrt_layer = QgsRasterLayer(batch_vrt_path, os.path.basename(batch_vrt_path))
+
+            if (batch_vrt_path != '') and my_vrt_layer:
+                QgsProject.instance().addMapLayer(my_vrt_layer)
+                my_file_path_text = self.set_text_color(batch_vrt_path, 2, 600)
+                warning_text = self.set_text_color("Warning: no fetaures in TIL, check source directory", 1, 600)
+                self.testedit_logdisplay.append(
+                    "Tile Index Layer created and loaded in project. Source in default user folder: "
+                    + my_file_path_text)
+                self.testedit_logdisplay.append('')
+                self.testedit_logdisplay.append(
+                    'Time process: ' + str(round((time.time() - start_time), 2)) + ' second(s)')
+                self.testedit_logdisplay.append('')
+            else:
+                self.testedit_logdisplay.append('Process aborted')
+
+            # delete global variable
+            del cmd_file_vrt
+            del batch_vrt_path
+
+            self.progress_bar.setValue(100)
+            time.sleep(0.5)
+            self.progress_bar.setValue(0)
+
+        except:
+            self.unexpected_error_message()
