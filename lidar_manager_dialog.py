@@ -795,8 +795,8 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             t1 = threading.Thread(target=self.file_batch_til())  # get global variable  til_path, cmd_file_til
             t2 = threading.Thread(target=self.osgeo4w_run(cmd_file_til))
             t1.start()
-            t2.start()
             t1.join()
+            t2.start()
             t2.join()
 
             my_til_layer = QgsVectorLayer(til_path, os.path.basename(til_path))
@@ -920,11 +920,11 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             cmd_file_vrt = ''
             batch_vrt_path = ''
             my_dtm_list_vrt = []
-            error_flag = 0
             my_count = 0
             my_count_none = 0
             start_time = time.time()
             my_selection = self.load_lidar_from_til_start()  # get selection from input layer
+            print('step1 ', (round((time.time() - start_time), 2)))
             # work only with no empty list
             if my_selection:
                 # add single file lidar from path field in features selection
@@ -943,6 +943,7 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
                         my_count_none = my_count_none + 1
                     else:
                         my_dtm_list_vrt.append(feature[self.get_user_input()[1]])
+                print ('step2 ', (round((time.time() - start_time), 2)))
             # manage creation of batch file and running in OSgeo4W by threading
 
                 t1 = threading.Thread(target=self.file_batch_vrt(my_dtm_list_vrt))  # get global variable  til_path, cmd_file_til
@@ -953,11 +954,31 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
                 t2.join()
 
             my_vrt_layer = QgsRasterLayer(batch_vrt_path, os.path.basename(batch_vrt_path))
+            print('step3 ', (round((time.time() - start_time), 2)))
 
             if (batch_vrt_path != '') and my_vrt_layer:
                 QgsProject.instance().addMapLayer(my_vrt_layer)
                 my_file_path_text = self.set_text_color(batch_vrt_path, 2, 600)
                 warning_text = self.set_text_color("Warning: no fetaures in TIL, check source directory", 1, 600)
+
+                if self.ckb_epsgfield.isChecked():
+                    self.testedit_logdisplay.append(
+                        "To create VRT you have to use a unique EPSG source code, field option is not allowed")
+                    self.testedit_logdisplay.append(("EPSG not set \n"))
+                else:
+                    try:
+                        if self.get_user_input()[5].isValid():
+                            my_vrt_layer.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
+                        else:
+                            self.testedit_logdisplay.append("Invalid EPSG input. EPSG code not set")
+                    except:
+                        self.testedit_logdisplay.append("Error reading EPSG input. EPSG code not set")
+
+                vrt_r = QgsHillshadeRenderer(my_vrt_layer.dataProvider(), 1, self.get_user_input()[3],
+                                             self.get_user_input()[4])
+                vrt_r.setZFactor(self.get_user_input()[2])
+                my_vrt_layer.setRenderer(vrt_r)
+
                 self.testedit_logdisplay.append(
                     "Tile Index Layer created and loaded in project. Source in default user folder: "
                     + my_file_path_text)
@@ -976,5 +997,50 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             time.sleep(0.5)
             self.progress_bar.setValue(0)
 
+        except:
+            self.unexpected_error_message()
+
+    def create_vrt_from_til(self, mylist):
+        try:
+            self.testedit_logdisplay.append('Creating Virtual Raster (VRT) file, wait... \n')
+            # create vrt path file name
+            my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
+            my_vrt = 'Vrt_' + my_date_time_str + '.vrt'
+            vrt_path = os.path.join(MY_DEFAULT_DESTDIR, my_vrt)
+            # built vrt file and return callback to show progress
+            if mylist:
+                my_vrt_built = gdal.BuildVRT(vrt_path, mylist, callback=self.progress_callback)
+                self.testedit_logdisplay.append('VRT created, add to project and set EPSG....\n')
+                my_vrt_built = None
+                my_new_vrt = self.iface.addRasterLayer(vrt_path, my_vrt)
+                self.progress_bar.setTextVisible(True)
+                self.progress_bar.setValue(85)
+                time.sleep(0.5)
+                # manage raster projection by input user
+                if self.ckb_epsgfield.isChecked():
+                    self.testedit_logdisplay.append(
+                        "To create VRT you have to use a unique EPSG source code, field option is not allowed")
+                    self.testedit_logdisplay.append(("EPSG not set \n"))
+                else:
+                    try:
+                        if self.get_user_input()[5].isValid():
+                            my_new_vrt.setCrs(QgsCoordinateReferenceSystem(self.get_user_input()[5]))
+                        else:
+                            self.testedit_logdisplay.append("Invalid EPSG input. EPSG code not set")
+                    except:
+                        self.testedit_logdisplay.append("Error reading EPSG input. EPSG code not set")
+
+                self.progress_bar.setValue(90)
+                time.sleep(0.5)
+                vrt_r = QgsHillshadeRenderer(my_new_vrt.dataProvider(), 1, self.get_user_input()[3],
+                                             self.get_user_input()[4])
+                vrt_r.setZFactor(self.get_user_input()[2])
+                my_new_vrt.setRenderer(vrt_r)
+                self.progress_bar.setValue(100)
+                time.sleep(0.5)
+                self.testedit_logdisplay.append("VRT file creted in default user folder: ")
+                self.testedit_logdisplay.append(self.set_text_color(vrt_path, 2, 600))
+                self.testedit_logdisplay.append('')
+                self.progress_bar.setValue(0)
         except:
             self.unexpected_error_message()
