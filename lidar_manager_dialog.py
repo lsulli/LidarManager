@@ -42,7 +42,7 @@ from qgis.core import QgsMapLayerType, QgsProject
 from qgis.gui import QgsEncodingFileDialog
 
 # constant variable
-MY_VERSION = '0.9.6'
+MY_VERSION = '0.9.8'
 # qet default user directory set by Qgis
 USER_DIRECTORY = QgsApplication.qgisSettingsDirPath()
 # set default destination directory to output file. User can't change destination directory,
@@ -614,7 +614,10 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             else:
                 if mytot_selection > 12:
                     self.testedit_logdisplay.append(
-                        str(mytot_selection) + ' tile features selected. Process may take long time \n')
+                        str(mytot_selection) + ' tile features selected. Process time estimated is about '
+                        + str(round(mytot_selection*0.8)) + ' seconds \n')
+            self.testedit_logdisplay.repaint()
+            self.progress_bar.setValue(15)
             return my_selection
         except:
             self.unexpected_error_message()
@@ -836,7 +839,8 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
         if my_cmd_file:
             my_call = [CMD_OSGEO4W, my_cmd_file]
             subprocess.run(my_call)
-            # os.remove(my_cmd_file)
+            os.remove(my_cmd_file)
+
 
     def file_batch_til(self):
         global cmd_file_til
@@ -884,7 +888,7 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
         my_string_list = ''
 
         if my_list:
-            self.progress_bar.setValue(0)
+
             # use specific name and location to manage name output
             my_date_time_str = time.strftime("%Y_%m_%d_%H_%M_%S")
             my_vrt = 'vrt_' + my_date_time_str + '.vrt'
@@ -905,7 +909,8 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             f.write(my_string_code_batch)
             f.close()
 
-            self.testedit_logdisplay.append('Run batch file from OSGeo4w shell \n')
+            self.testedit_logdisplay.append('...run batch file from OSGeo4w shell.... wait \n')
+            self.testedit_logdisplay.repaint()
 
     def create_vrt(self):
         """Create a Virtual Raster File by gdalbuildvrt function in OSGeo4W shell
@@ -915,6 +920,8 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             if self.chk_help.isChecked():
                 self.testedit_logdisplay.setText('Help: ' + self.create_vrt.__doc__)
             # get global variable for threading
+            self.testedit_logdisplay.repaint()
+
             global cmd_file_vrt
             global batch_vrt_path
             cmd_file_vrt = ''
@@ -924,9 +931,12 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             my_count_none = 0
             start_time = time.time()
             my_selection = self.load_lidar_from_til_start()  # get selection from input layer
-            print('step1 ', (round((time.time() - start_time), 2)))
+            self.progress_bar.setValue(10)
+
             # work only with no empty list
             if my_selection:
+                self.testedit_logdisplay.append('Check file type and write batch file for OSGeo4w shell.... \n')
+                self.testedit_logdisplay.repaint()
                 # add single file lidar from path field in features selection
                 for feature in my_selection:
                     my_count = my_count + 1
@@ -943,18 +953,20 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
                         my_count_none = my_count_none + 1
                     else:
                         my_dtm_list_vrt.append(feature[self.get_user_input()[1]])
-                print ('step2 ', (round((time.time() - start_time), 2)))
-            # manage creation of batch file and running in OSgeo4W by threading
+                    self.progress_bar.setValue(1 + int(my_count / len(my_selection) * 70))
+            # manage creation of batch file and running in OSgeo4W by threading (im not sure it work as i want)
 
                 t1 = threading.Thread(target=self.file_batch_vrt(my_dtm_list_vrt))  # get global variable  til_path, cmd_file_til
+                self.testedit_logdisplay.repaint()
+                self.progress_bar.setValue(80)
                 t2 = threading.Thread(target=self.osgeo4w_run(cmd_file_vrt))
                 t1.start()
                 t2.start()
                 t1.join()
                 t2.join()
+                self.progress_bar.setValue(50)
 
             my_vrt_layer = QgsRasterLayer(batch_vrt_path, os.path.basename(batch_vrt_path))
-            print('step3 ', (round((time.time() - start_time), 2)))
 
             if (batch_vrt_path != '') and my_vrt_layer:
                 QgsProject.instance().addMapLayer(my_vrt_layer)
@@ -978,13 +990,12 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
                                              self.get_user_input()[4])
                 vrt_r.setZFactor(self.get_user_input()[2])
                 my_vrt_layer.setRenderer(vrt_r)
-
                 self.testedit_logdisplay.append(
-                    "Tile Index Layer created and loaded in project. Source in default user folder: "
+                    "VRT created and loaded in project. Source in default user folder: "
                     + my_file_path_text)
                 self.testedit_logdisplay.append('')
                 self.testedit_logdisplay.append(
-                    'Time process: ' + str(round((time.time() - start_time), 2)) + ' second(s)')
+                    'Process done, total time running: ' + str(round((time.time() - start_time), 2)) + ' second(s)')
                 self.testedit_logdisplay.append('')
             else:
                 self.testedit_logdisplay.append('Process aborted')
@@ -993,9 +1004,10 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             del cmd_file_vrt
             del batch_vrt_path
 
-            self.progress_bar.setValue(100)
-            time.sleep(0.5)
-            self.progress_bar.setValue(0)
+            self.progress_bar.reset()
+            self.progress_bar.setRange(0,100)
+
+
 
         except:
             self.unexpected_error_message()
