@@ -47,12 +47,12 @@ MY_VERSION = '0.9.8'
 USER_DIRECTORY = QgsApplication.qgisSettingsDirPath()
 # set default destination directory to output file. User can't change destination directory,
 # it's simplify gui interaction
-# set default destination directory to output file
 MY_DEFAULT_DESTDIR = str(pathlib.PurePath(os.path.join(USER_DIRECTORY, 'processing/outputs/')))
 # variable with help page in gitHub
 MY_README_LINK = r'https://github.com/lsulli/LidarManager/blob/main/README.md'
 # variable to osgeo4w shell
 CMD_OSGEO4W = os.path.join(os.environ.get('OSGEO4W_ROOT'), 'OSGeo4W.bat')
+MY_SHORT_HELP_STRING = 'Help information \n'
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'lidar_manager_dialog_base.ui'))
@@ -86,14 +86,14 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.btn_loadactivelayer.setToolTip("Load active layer")
         self.btn_loadactivelayer.clicked.connect(self.sel_active_layer)
         self.btn_loadactivelayer.clicked.connect(self.field_select)
-        self.btn_addlidar_vrt.clicked.connect(self.create_vrt)
+        self.btn_addlidar_vrt.clicked.connect(lambda: self.create_vrt('from_til'))
         self.btn_addlidar_file.clicked.connect(self.load_lidar_from_til_core_file)
         self.btn_applytoselect.setToolTip("Apply hlsd to select")
         self.btn_applytoselect.clicked.connect(self.apply_az_elev_zfactor)
         self.btn_default_value_hlsd.clicked.connect(self.default_value_hlsd)
         self.btn_browse_dir.clicked.connect(lambda: self.browse_dir('copy_lidar'))
         self.btn_copy_lidar.clicked.connect(self.copy_lidar_from_layer)
-        self.btn_vrt_from_toc.clicked.connect(self.create_vrt_from_toc)
+        self.btn_vrt_from_toc.clicked.connect(lambda: self.create_vrt('from_toc'))
         self.btn_create_tileindex.clicked.connect(self.create_til)
         self.btn_clean_log.clicked.connect(self.clear_log)
         self.cancelBtn.clicked.connect(self.reject)
@@ -148,13 +148,14 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.unexpected_error_message()
 
     def sel_active_layer(self):
-        """Get active layer in TOC, if it is a polygon layer pass to tile index layer combo box
-        and populate fields combo box
+        """        Get active layer in TOC, if it's a polygon layer 
+        pass to tile index layer combo box and populate fields 
+        combo box.
         --------------------------"""
         try:
             self.testedit_logdisplay.clear()
             if self.chk_help.isChecked():
-                self.testedit_logdisplay.setText('Help: ' + self.sel_active_layer.__doc__)
+                self.testedit_logdisplay.setText(MY_SHORT_HELP_STRING + self.sel_active_layer.__doc__)
             if not self.ckb_setdefault.isChecked():
                 try:
                     if self.iface.activeLayer():
@@ -698,6 +699,8 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
                 time.sleep(0.5)
                 self.progress_bar.setValue(0)
                 self.iface.setActiveLayer(self.get_user_input()[0])
+            else:
+                self.progress_bar.setValue(0)
         except:
             self.unexpected_error_message()
 
@@ -912,7 +915,7 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.testedit_logdisplay.append('...run batch file from OSGeo4w shell.... wait \n')
             self.testedit_logdisplay.repaint()
 
-    def create_vrt(self):
+    def create_vrt(self, vrt_type):
         """Create a Virtual Raster File by gdalbuildvrt function in OSGeo4W shell
         --------------------------"""
         try:
@@ -930,29 +933,49 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             my_count = 0
             my_count_none = 0
             start_time = time.time()
-            my_selection = self.load_lidar_from_til_start()  # get selection from input layer
+            my_selection = []
+            my_raster_toc = []
+
+            if vrt_type == 'from_til' :
+                my_selection = self.load_lidar_from_til_start()  # get selection from input layer
+                print(my_selection)
+            elif vrt_type == 'from_toc':
+                my_raster_toc = self.iface.layerTreeView().selectedLayersRecursive()
+                for rst in my_raster_toc:
+                    if rst.type() == QgsMapLayerType.RasterLayer:
+                        my_selection.append(rst.publicSource())
+                        my_count = my_count + 1
+                    else:
+                        my_count_none = my_count_none + 1
+                my_dtm_list_vrt = my_selection
+                print(my_dtm_list_vrt)
+
+                #self.def_test()
+
             self.progress_bar.setValue(10)
 
             # work only with no empty list
             if my_selection:
                 self.testedit_logdisplay.append('Check file type and write batch file for OSGeo4w shell.... \n')
                 self.testedit_logdisplay.repaint()
-                # add single file lidar from path field in features selection
-                for feature in my_selection:
-                    my_count = my_count + 1
-                    # check if file exist and is a QgsRasterLayer (return None if is invalid)
-                    try:
-                        rlyr = QgsRasterLayer(feature[self.get_user_input()[1]],
-                                              os.path.basename(feature[self.get_user_input()[1]]))
-                    except:
-                        rlyr = QgsRasterLayer('invalid_path', 'invalid_raster')
-                        # when error occur from selected feature create an invalid raster
-                        # type to pass next one and manage the invalid one
+                if vrt_type == 'from_til':
+                    # add single file lidar from path field in features selection
+                    for feature in my_selection:
+                        my_count = my_count + 1
+                        # check if file exist and is a QgsRasterLayer (return None if is invalid)
+                        try:
+                            rlyr = QgsRasterLayer(feature[self.get_user_input()[1]],
+                                                  os.path.basename(feature[self.get_user_input()[1]]))
+                        except:
+                            rlyr = QgsRasterLayer('invalid_path', 'invalid_raster')
+                            # when error occur from selected feature create an invalid raster
+                            # type to pass next one and manage the invalid one
 
-                    if not rlyr.isValid():
-                        my_count_none = my_count_none + 1
-                    else:
-                        my_dtm_list_vrt.append(feature[self.get_user_input()[1]])
+                        if not rlyr.isValid():
+                            my_count_none = my_count_none + 1
+                        else:
+                            my_dtm_list_vrt.append(feature[self.get_user_input()[1]])
+
                     self.progress_bar.setValue(1 + int(my_count / len(my_selection) * 70))
             # manage creation of batch file and running in OSgeo4W by threading (im not sure it work as i want)
 
