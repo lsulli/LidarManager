@@ -42,12 +42,12 @@
     <rect>
      <x>30</x>
      <y>27</y>
-     <width>125</width>
+     <width>173</width>
      <height>20</height>
     </rect>
    </property>
    <property name="text">
-    <string>Tile Index  Layer LIDAR</string>
+    <string>Tile Index  Layer</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -74,12 +74,12 @@
     <rect>
      <x>18</x>
      <y>77</y>
-     <width>142</width>
+     <width>144</width>
      <height>17</height>
     </rect>
    </property>
    <property name="text">
-    <string>Field path file LIDAR</string>
+    <string>Field path file</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -319,6 +319,12 @@
      <height>17</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
    <property name="autoFillBackground">
     <bool>true</bool>
    </property>
@@ -385,6 +391,12 @@
      <width>170</width>
      <height>17</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
    </property>
    <property name="autoFillBackground">
     <bool>true</bool>
@@ -534,11 +546,17 @@
   <widget class="QLabel" name="label_10">
    <property name="geometry">
     <rect>
-     <x>96</x>
+     <x>79</x>
      <y>10</y>
-     <width>170</width>
-     <height>17</height>
+     <width>204</width>
+     <height>18</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
    </property>
    <property name="autoFillBackground">
     <bool>true</bool>
@@ -700,7 +718,7 @@
     <rect>
      <x>110</x>
      <y>497</y>
-     <width>111</width>
+     <width>114</width>
      <height>23</height>
     </rect>
    </property>
@@ -727,7 +745,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Add Lidar as vrt</string>
+    <string>Add LIDAR as vrt</string>
    </property>
    <property name="default">
     <bool>true</bool>
@@ -759,7 +777,7 @@
      <rect>
       <x>6</x>
       <y>105</y>
-      <width>75</width>
+      <width>80</width>
       <height>25</height>
      </rect>
     </property>
@@ -798,9 +816,9 @@
    <widget class="QPushButton" name="btn_open_user_folder">
     <property name="geometry">
      <rect>
-      <x>220</x>
+      <x>211</x>
       <y>105</y>
-      <width>98</width>
+      <width>107</width>
       <height>25</height>
      </rect>
     </property>
@@ -846,9 +864,9 @@
    <widget class="QPushButton" name="btn_vrt_from_toc">
     <property name="geometry">
      <rect>
-      <x>170</x>
+      <x>165</x>
       <y>69</y>
-      <width>145</width>
+      <width>152</width>
       <height>25</height>
      </rect>
     </property>
@@ -856,7 +874,7 @@
      <string/>
     </property>
     <property name="text">
-     <string>Create vrt file from TOC</string>
+     <string>Create vrt from TOC</string>
     </property>
     <property name="default">
      <bool>true</bool>
@@ -872,7 +890,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Copy lidar file to directory</string>
+     <string>Copy LIDAR file to DIR</string>
     </property>
    </widget>
    <widget class="Line" name="line">
@@ -893,7 +911,7 @@
      <rect>
       <x>6</x>
       <y>69</y>
-      <width>145</width>
+      <width>152</width>
       <height>25</height>
      </rect>
     </property>
@@ -901,7 +919,7 @@
      <string/>
     </property>
     <property name="text">
-     <string>Create TIL from directory</string>
+     <string>Create TIL from DIR</string>
     </property>
     <property name="default">
      <bool>true</bool>
@@ -970,7 +988,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Add Lidar as file</string>
+    <string>Add LIDAR as file</string>
    </property>
    <property name="default">
     <bool>true</bool>
