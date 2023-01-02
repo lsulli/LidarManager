@@ -24,5 +24,6 @@ Other Tools:
 When Lidar Manager Plugin is load reads layers in Table of Content (TOC) and get only polygon vector layer to populate combo box list. Get the first one in TOC. The list is empty if there aren't polygon layer. 
 With dedicate button ![alt text](./readme_image/fig2.JPG) you can get the active layer in TOC.
 
+![alt text](./readme_image/fig3.JPG)
 
 
