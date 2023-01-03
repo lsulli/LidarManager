@@ -51,6 +51,10 @@ Choose your the TIL with LIDAR reference if exist, if not you can create it with
 
 In "**Field path file**" combo box are listing all the string type field present in the TIL, choose one with a file valid path (NB: it work with all raster file). 
 
+With dedicate button ![alt text](./readme_image/fig5.JPG) you can check path validity and report it in log box:
+
+![alt text](./readme_image/fig6.JPG)
+
 You can set the EPSG code for CRS from a dedicate field ("**Field EPSG Code**" combo box) or from Qgis combo box for EPSG code list ("**Qgis Epsg code"**).
 
 Whenever you load or open Lidar Manager by default it gets  EPSG code from current Qgis project.
@@ -59,11 +63,14 @@ NB: EPSG setting is used by TIL and VRT tools
 
 With "**lock as default**" checkbox user can lock input variable in "**Tile Index Setting"**  to preserve change. 
 
+
 ![alt text](./readme_image/fig3.JPG)
 
 ##  Hillshading Setting <a name="hlsd_setting"></a>
 
 ##  Add Lidar to Project <a name="add_lidar"></a>
+
+![alt text](./readme_image/fig7.JPG)
 
 ##  Utility <a name="Utility"></a>
 
