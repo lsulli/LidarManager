@@ -14,8 +14,6 @@ Tested with QGIS 3.10 and later in Windows 8 and later.
 3. [Tile Index Layer Setting](#til_setting)
 5. [Hillshading setting](#hlsd_setting)
 6. [Utility](#utility)
-7. [Caratteristiche Shapefile](#car_shape)
-8. [Bug fix](#bug_fix)
 
 ## Main features <a name="fun_princ"></a>
 
