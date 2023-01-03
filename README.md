@@ -13,7 +13,8 @@ Tested with QGIS 3.10 and later in Windows 8 and later.
 2. [Main features](#fun_princ)
 3. [Tile Index Layer Setting](#til_setting)
 5. [Hillshading setting](#hlsd_setting)
-6. [Utility](#utility)
+6. [Add lidar to project](#add_lidar)
+7. [Utility](#utility)
 
 ## Main features <a name="fun_princ"></a>
 
@@ -54,13 +55,15 @@ You can set the EPSG code for CRS from a dedicate field ("**Field EPSG Code**" c
 
 Whenever you load or open Lidar Manager by default it gets  EPSG code from current Qgis project.
 
-NB: EPSG setting is used by TIl and VRT tools
+NB: EPSG setting is used by TIL and VRT tools
 
 With "**lock as default**" checkbox user can lock input variable in "**Tile Index Setting"**  to preserve change. 
 
 ![alt text](./readme_image/fig3.JPG)
 
 ##  Hillshading Setting <a name="hlsd_setting"></a>
+
+##  Add Lidar to Project <a name="add_lidar"></a>
 
 ##  Utility <a name="Utility"></a>
 
