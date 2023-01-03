@@ -17,11 +17,11 @@ Tested with QGIS 3.10 and later in Windows 8 and later.
 
 ## Main features <a name="fun_princ"></a>
 
-Add file(s) LIDAR and/or single virtual raster file directly from selected features in Tile Index Layer with valid field path (you can create TIL with dedicate tool - see below). 
+Add file(s) LIDAR and/or single virtual raster file directly from selected features in Tile Index Layer (**TIL**) with valid field path (you can create TIL with dedicate tool - see below). 
 Set on the fly hillshading parameter and CRS. 
 Change LIDAR hillshading setting in TOC.
 Other Tools: 
-  - copy LIDAR selected in Tile Index Layer to destination directory
+  - copy LIDAR selected in TIL to destination directory
   - create Tile Index Layer from directory (with subdirectory) and populate valid field path (very fast: use OSGeo4W shell with gdaltileindex command)
   - create virtual raster file from LIDAR active in TOC
   - check path field in Tile Index Layer to control valid path for raster
@@ -37,14 +37,30 @@ l.sulli@appenninosettentrionale.it - lorenzo.sulli@gmail.com
  
 ##  Tile Index Layer Setting <a name="til_setting"></a>
 
-When Lidar Manager Plugin is load reads layers in Table of Content (TOC) and gets only polygon vector layer to populate combo box list. Gets the first one in TOC. The list is empty if there aren't polygon layer. 
+When Lidar Manager Plugin is load you should see a button like this ![alt text](./readme_image/fig4.JPG) in Plugins Toolbar.
+
+Lidar Manager reads layers in Table of Content (TOC) and gets **only** polygon vector layer to populate "**Tile Index Layer LIDAR**" combo box list. Gets the first one in TOC. The list is empty if there aren't polygon layer. 
+
 With dedicate button ![alt text](./readme_image/fig2.JPG) you can get the active polygon layer in TOC.
+
+Choose your the TIL with LIDAR reference if exist, if not you can create it with dedicate tool "**Create TIL from DIR**" in the **Utility** section
 
 ![alt text](./readme_image/fig1.JPG)
 
+
+In "**Field path file**" combo box are listing all the string type field present in the TIL, choose one with a file valid path (NB: it work with all raster file). 
+
+You can set the EPSG code for CRS from a dedicate field ("**Field EPSG Code**" combo box) or from Qgis combo box for EPSG code list ("**Qgis Epsg code"**).
+
+Whenever you load or open Lidar Manager by default it gets  EPSG code from current Qgis project.
+
+NB: EPSG setting is used by TIl and VRT tools
+
+With "**lock as default**" checkbox user can lock input variable in "**Tile Index Setting"**  to preserve change. 
 
 ![alt text](./readme_image/fig3.JPG)
 
 ##  Hillshading Setting <a name="hlsd_setting"></a>
 
 ##  Utility <a name="Utility"></a>
+
