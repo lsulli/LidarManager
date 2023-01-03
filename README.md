@@ -54,7 +54,7 @@ You can set the EPSG code for CRS from a dedicate field ("**Field EPSG Code**" c
 
 Whenever you load or open Lidar Manager by default it gets  EPSG code from current Qgis project.
 
-NB: EPSG setting is used by TIl and VRT tools
+NB: EPSG setting is used by TIL and VRT tools
 
 With "**lock as default**" checkbox user can lock input variable in "**Tile Index Setting"**  to preserve change. 
 
