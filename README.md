@@ -73,7 +73,7 @@ With "**lock as default**" checkbox user can lock input variable in "**Tile Inde
 
 ![alt text](./readme_image/fig3.JPG)
 
-##  Hillshading Setting
+##  Hillshading Setting <a name="hlsd_setting"></a>
 User can set hillshading variable Azimut, Elevation and Z factor before load Lidar or apply a new variable combination to vrt/group/file in TOC. 
 
 ![alt text](./readme_image/fig8b.JPG)
