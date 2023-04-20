@@ -85,11 +85,16 @@ With "**set default**" return to standard 315/45/1 value for azimut/elevation/z 
 
 ##  Add Lidar to Project <a name="add_lidar"></a>
 User can load LIDAR as single file or as Virtual Raster File (.vrt).
+
 ![alt text](./readme_image/fig7.JPG)
+
 The code check file and try to loads it. Log box reports it.
 Returns and load raster file
+
 ![alt text](./readme_image/fig9a.JPG)
+
 Returns no raster file and doesn't load it
+
 ![alt text](./readme_image/fig9b.JPG)
 
 VRT is created on Default User folder (code use QgsApplication::qgisSettingsDirPath that returns the path to the settings directory in user's home dir) with a name as **vrt_yyyy_mm_dd_hh_mm_ss.vrt** and load on TOC. User can save vrt where he prefer.
