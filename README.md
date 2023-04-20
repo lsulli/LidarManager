@@ -104,7 +104,7 @@ NB: To create vrt file the code writes a batch file and run it on OSGeo4w shell.
 
 ![alt text](./readme_image/fig9c.JPG)
 
-##  Utility <a name="Utility"></a>
+##  Utility <a name="utility"></a>
 "**Copy LIDAR file to DIR**" reads file path on features selected in TIL and copy files to a destination folder. Thread process is not optimized so with many files Qgis application can turn to freeze: be patient.
 
 ![alt text](./readme_image/fig10a.JPG)
