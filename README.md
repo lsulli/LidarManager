@@ -40,9 +40,9 @@ l.sulli@appenninosettentrionale.it - lorenzo.sulli@gmail.com
 ## START <a name="start"></a>
 
  When Lidar Manager Plugin is load you should see a button like this ![alt text](./readme_image/fig4.JPG) in Plugins Toolbar and a submenu in Raster menu.
- The Lidar Manager Window is always on the top also when Qgis is minimize,it's useful to work with other application like window explorer. 
- On start Lidar Manager Window is put in the right bottom side of the screen.
- User can switch from Qgis Main Window to Lidar Manager Window and work with both.
+ The Lidar Manager window is always on the top also when Qgis is minimize, it's useful to work with other application like window explorer. 
+ On start Lidar Manager window is put in the right bottom side of the screen.
+ User can switch from Qgis main window to Lidar Manager window and work with both.
  
 ##  Tile Index Layer Setting <a name="til_setting"></a>
 
@@ -98,7 +98,7 @@ Returns no raster file and doesn't load it
 
 ![alt text](./readme_image/fig9b.JPG)
 
-VRT is created on Default User folder (code use QgsApplication::qgisSettingsDirPath that returns the path to the settings directory in user's home dir) with a name as **vrt_yyyy_mm_dd_hh_mm_ss.vrt** and load on TOC. User can save vrt where he prefer.
+VRT is created on Default User folder (code use QgsApplication::qgisSettingsDirPath that returns the path to the settings directory in user's home dir) with a name as **vrt_yyyy_mm_dd_hh_mm_ss.vrt**, set to EPSG code selected in combobox and loads on TOC. User can save vrt where he prefer.
 
 NB: To create vrt file the code writes a batch file and run it on OSGeo4w shell. It's quite fast, faster than gdal python module, but with many files it could takes some time, be patient: thread process is not optimized. Log box reports it with a estimated process time:
 
@@ -109,9 +109,9 @@ NB: To create vrt file the code writes a batch file and run it on OSGeo4w shell.
 
 ![alt text](./readme_image/fig10a.JPG)
 
-"**Create TIL from DIR**" create a Tile Index Layer from a set of layers files in a folder and write the file path in a field called "**location**", User can use this TIL file directly in LIDAR Manager. The code writes a batch file and run it on OSGeo4w shell. It's quite fast, faster than gdal python module, but with many files it could takes some time, be patient: thread process is not optimized.
+"**Create TIL from DIR**" create a Tile Index Layer from a set of LiDAR files in a folder and write the file path in a field called "**location**", User can use this TIL file directly in LIDAR Manager. The code writes a batch file and run it on OSGeo4w shell. It's quite fast, faster than gdal python module, but with many files it could takes some time, be patient: thread process is not optimized. 
 
-TIL is created as geopackage on Default User folder with a name as **TIL_yyyy_mm_dd_hh_mm_ss.gpkg** and load on TOC. User can save TIL as he prefer.
+TIL is created as geopackage on Default User folder with a name as **TIL_yyyy_mm_dd_hh_mm_ss.gpkg*, set to EPSG code selected in combobox and loads on TOC. User can save TIL as he prefer.
 
 ![alt text](./readme_image/fig10b.JPG)
 
