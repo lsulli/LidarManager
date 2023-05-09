@@ -8,6 +8,12 @@ Utility tools for TIL and VRT are active only in Windows with OSGeo4w shell is p
 
 Tested with QGIS 3.10 and later in Windows 8 and later.
 
+
+
+https://github.com/lsulli/LidarManager/assets/11753702/2b4ce4fe-c20b-4c6f-83f0-2481cd10c159
+
+
+
 ## Summary
 1. [Author](#autore)
 2. [Main features](#fun_princ)
