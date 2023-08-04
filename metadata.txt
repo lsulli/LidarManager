@@ -98,7 +98,7 @@ homepage=https://github.com/lsulli/LidarManagerPlugin
 category=Raster
 icon=icons\LidarManager.ico
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
