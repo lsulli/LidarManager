@@ -6,25 +6,26 @@
 name=Lidar Manager
 qgisMinimumVersion=3.10
 description=Manage lidar (dtm/dsm) dataset from Tile Index Layer
-version=0.9.9
+version=0.9.10
 author=Lorenzo Sulli - Autorità di bacino distrettuale Appennino settentrionale
 email=l.sulli@appenninosettentrionale.it - lorenzo.sulli@gmail.com
 
 about=
 	Qgis Plugin to manage small and large LIDAR dataset. Useful to GIS user with intensive job in LIDAR analysis.
 
-	Requests LIDAR file(s) in readable directory and user with read and write privilege for user directory. Tested with Qgis 3.10 and following
+	Request LIDAR file(s) in readable directory and user with read and write privilege for user directory. Tested with Qgis 3.10 and following
 
-	Add file(s) lidar and/or single virtual raster file directly from Tile Index Layer field with valid path. Sets on the fly hillshading parameter and CRS.
+	Add file(s) lidar and/or single virtual raster file directly from Tile Index Layer with valid field path. Set on the fly hillshading parameter and CRS. 
 	Change hillshading setting to LIDAR in TOC.
 
 	Other Tools:
-		- copy LIDAR selected in Tile Index Layer to destination directory
-		- creates Tile Index Layer from directory/subdirectory or from LIDAR in TOC and populate field with valid path. NB: use gdaltileindex from OSGeo4w shell
+    	- copy LIDAR selected in Tile Index Layer to destination directory
+    	- create Tile Index Layer from directory/subdirectory or frome LIDAR in TOC and populate valid field path. NB use gdaltileindex from OSGeo4w shell
 		it'very fast process but need OSGgeo4W shell active and in original directory istallation (OSGEO4W_ROOT enviromental system variable)
-		- creates virtual raster file from LIDAR active in TOC
-		- checks path field in Tile Index Layer to control valid path for raster
-		- interactive help string and log message
+    	- create virtual raster file from LIDAR active in TOC
+    	- check path field in Tile Index Layer to control valid path for raster
+    	- interactive help string and log message
+
 
 
 tracker=https://github.com/lsulli/LidarManagerPlugin/issues
@@ -36,6 +37,9 @@ repository=https://github.com/lsulli/LidarManagerPlugin
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
+	2023.08.04
+		After 3 months user test (185 download) and no issues promote to stable as 0.9.10
+		fix statusbar bug for some code running
 	2023.04.20
 		upload in plugin repository as experimental
 	2022.11.18

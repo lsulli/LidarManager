@@ -43,7 +43,7 @@ from qgis.core import QgsMapLayerType, QgsProject
 from qgis.gui import QgsEncodingFileDialog
 
 # constant variable
-MY_VERSION = '0.9.9'
+MY_VERSION = '0.9.10'
 # qet default user directory set by Qgis
 USER_DIRECTORY = QgsApplication.qgisSettingsDirPath()
 # set default destination directory to output file. User can't change destination directory,
@@ -578,6 +578,8 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             if mytot_selection == 0:
                 self.testedit_logdisplay.append(
                     "No feature selection in Layer: " + self.get_user_input()[0].name() + ' - exit \n')
+                self.testedit_logdisplay.append('')
+                self.testedit_logdisplay.append(self.set_text_color('Process aborted', 1, 600))
             else:
                 if mytot_selection > 12:
                     self.testedit_logdisplay.append(
@@ -659,6 +661,8 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
                     if my_count_none == len(my_selection):
                         self.testedit_logdisplay.append(
                             'Check type and attributes of selected field.')  # display when all record are invalid
+                        self.testedit_logdisplay.append('')
+                        self.testedit_logdisplay.append(self.set_text_color('Process aborted', 1, 600))
                 if error_flag == 1:  # run only when find at least one valid raster
                     self.testedit_logdisplay.append('\n EPSG not set or invalid')
 
@@ -671,7 +675,8 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.unexpected_error_message()
 
     def unexpected_error_message(self):
-        self.testedit_logdisplay.append('Unexpected error. See stack traces: \n')
+        self.testedit_logdisplay.append(self.set_text_color('Unexpected error. See stack traces: \n', 1, 600))
+        self.testedit_logdisplay.append('')
         self.testedit_logdisplay.append(''.join(traceback.format_exc()))
 
     def open_readme_md(self):
@@ -748,6 +753,7 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
         except:
             self.unexpected_error_message()
 
+
     def create_til(self):
         """Create a Tile Index Layer from directory source by gdaltindex function in OSGeo4W shell
         --------------------------"""
@@ -787,7 +793,7 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
                     'Time process: ' + str(round((time.time() - start_time), 2)) + ' second(s)')
                 self.testedit_logdisplay.append('')
             else:
-                self.testedit_logdisplay.append('Process aborted')
+                self.testedit_logdisplay.append(self.set_text_color('Process aborted', 1, 600))
 
             # delete global variable
             del cmd_file_til
@@ -799,6 +805,8 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
 
         except:
             self.unexpected_error_message()
+            self.testedit_logdisplay.append('Probabily error in call OSGeo4W shell. Check OSGEO4W_ROOT variable and/or if windows console is enable \n')
+
 
     @staticmethod
     def osgeo4w_run(my_cmd_file):
@@ -808,7 +816,7 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             my_call = [CMD_OSGEO4W, my_cmd_file]
             subprocess.run(my_call)
             os.remove(my_cmd_file)
-
+    
     def file_batch_til(self):
         global cmd_file_til
         global til_path
@@ -902,7 +910,6 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
 
             if vrt_type == 'from_til' :
                 my_selection = self.load_lidar_from_til_start()  # get selection from input layer
-                print(my_selection)
             elif vrt_type == 'from_toc':
                 my_raster_toc = self.iface.layerTreeView().selectedLayersRecursive()
                 for rst in my_raster_toc:
@@ -912,7 +919,6 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
                     else:
                         my_count_none = my_count_none + 1
                 my_dtm_list_vrt = my_selection
-                print(my_dtm_list_vrt)
 
                 #self.def_test()
 
@@ -945,13 +951,13 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
 
                 t1 = threading.Thread(target=self.file_batch_vrt(my_dtm_list_vrt))  # get global variable  til_path, cmd_file_til
                 self.testedit_logdisplay.repaint()
-                self.progress_bar.setValue(80)
+                self.progress_bar.setValue(50)
                 t2 = threading.Thread(target=self.osgeo4w_run(cmd_file_vrt))
                 t1.start()
                 t2.start()
                 t1.join()
                 t2.join()
-                self.progress_bar.setValue(50)
+                self.progress_bar.setValue(75)
 
             my_vrt_layer = QgsRasterLayer(batch_vrt_path, os.path.basename(batch_vrt_path))
 
@@ -977,6 +983,9 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
                                              self.get_user_input()[4])
                 vrt_r.setZFactor(self.get_user_input()[2])
                 my_vrt_layer.setRenderer(vrt_r)
+                
+
+                self.testedit_logdisplay.append('')
                 self.testedit_logdisplay.append(
                     "VRT created and loaded in project. Source in default user folder: "
                     + my_file_path_text)
@@ -984,8 +993,24 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.testedit_logdisplay.append(
                     'Process done, total time running: ' + str(round((time.time() - start_time), 2)) + ' second(s)')
                 self.testedit_logdisplay.append('')
+                
+                if my_count_none > 0:
+                    my_text = self.set_text_color(self.get_user_input()[1], 0, 600, 'italic')
+                    self.testedit_logdisplay.append(
+                        'Path field "' + my_text + '" return no raster type for ' + str(my_count_none)
+                        + ' record(s) of ' + str(len(my_selection)) + ' record(s) selected. \n')
+            
             else:
-                self.testedit_logdisplay.append('Process aborted')
+                if my_count_none > 0:
+                    my_text = self.set_text_color(self.get_user_input()[1], 0, 600, 'italic')
+                    self.testedit_logdisplay.append(
+                        'Path field "' + my_text + '" return no raster type for ' + str(my_count_none)
+                        + ' record(s) of ' + str(len(my_selection)) + ' record(s) selected. \n')
+                    if my_count_none == len(my_selection):
+                        self.testedit_logdisplay.append(
+                            'Check type and attributes of selected field.')  # display when all record are invalid
+                self.testedit_logdisplay.append('')
+                self.testedit_logdisplay.append(self.set_text_color('Process aborted', 1, 600))
 
             # delete global variable
             del cmd_file_vrt
@@ -995,4 +1020,7 @@ class LidarManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             self.progress_bar.setRange(0,100)
         except:
             self.unexpected_error_message()
+            self.testedit_logdisplay.append('Possible solution: check OSGEO4W_ROOT variable and/or if windows console is enable \n')
+            self.progress_bar.reset()
+            self.progress_bar.setRange(0,100)
 
