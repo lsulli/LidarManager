@@ -56,7 +56,7 @@ Lidar Manager reads layers in Table of Content (TOC) and gets **only** polygon v
 
 With dedicate button ![alt text](./readme_image/fig2.JPG) User can get the active polygon layer in TOC.
 
-Choose your the TIL with LIDAR reference if exist. User can create it with dedicate tool "**Create TIL from DIR**" in the **Utility** section
+Choose your the TIL with LIDAR reference if exist. User can create it with dedicate tool "**Create TIL from DIR**" in the **Utility** section.
 
 ![alt text](./readme_image/fig1.JPG)
 
