@@ -45,7 +45,7 @@ l.sulli@appenninosettentrionale.it - lorenzo.sulli@gmail.com
 
 ## START <a name="start"></a>
 
- When Lidar Manager Plugin is load you should see a button like this ![alt text](./readme_image/fig4.JPG) in Plugins Toolbar and a submenu in Raster menu.
+ When Lidar Manager Plugin is loaded you should see a button like this ![alt text](./readme_image/fig4.JPG) in Plugins Toolbar and a submenu in Raster menu.
  The Lidar Manager window is always on the top also when Qgis is minimize, it's useful to work with other application like window explorer. 
  On start Lidar Manager window is put in the right bottom side of the screen.
  User can switch from Qgis main window to Lidar Manager window and work with both.
