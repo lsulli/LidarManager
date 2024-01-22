@@ -50,6 +50,8 @@ l.sulli@appenninosettentrionale.it - lorenzo.sulli@gmail.com
  On start Lidar Manager window is put in the right bottom side of the screen.
  User can switch from Qgis main window to Lidar Manager window and work with both.
  
+ **NB**: To prevent repeated requests for confirmation Project CRS on layer adding be sure to check "Leave as an unknown CRS (take non action)" in  setting/options/CRS Handling.
+ 
 ##  Tile Index Layer Setting <a name="til_setting"></a>
 
 Lidar Manager reads layers in Table of Content (TOC) and gets **only** polygon vector layer to populate "**Tile Index Layer LIDAR**" combo box list. Gets the first one in TOC. The list is empty if there aren't polygon layer. 
